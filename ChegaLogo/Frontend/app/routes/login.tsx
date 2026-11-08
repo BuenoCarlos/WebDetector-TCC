@@ -1,15 +1,13 @@
-
 import { useState, type FormEvent } from "react";
-import {
-  analisarTentativa,
-  type ResultadoAnalise,
-} from "../services/detector";
+import { useNavigate } from "react-router";
+import { login } from "../services/authService";
 
 export default function LoginForm() {
+  
+  const navigate = useNavigate();
+
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [resultado, setResultado] =
-    useState<ResultadoAnalise | null>(null);
   const [erro, setErro] = useState("");
   const [carregando, setCarregando] = useState(false);
 
@@ -17,22 +15,28 @@ export default function LoginForm() {
     event.preventDefault();
 
     setErro("");
-    setResultado(null);
     setCarregando(true);
 
     try {
-      const resposta = await analisarTentativa({
+      const resposta = await login({
         username,
         password,
       });
 
-      setResultado(resposta);
-    } catch {
-      setErro("Não foi possível comunicar com o servidor.");
+      if (resposta.success) {
+        navigate("/home");
+      }
+    } catch (error) {
+      setErro(
+        error instanceof Error
+          ? error.message
+          : "Não foi possível comunicar com o servidor."
+      );
     } finally {
       setCarregando(false);
     }
   }
+
 
   return (
     <main className="grid min-h-screen grid-cols-1 md:grid-cols-3">
@@ -91,7 +95,7 @@ export default function LoginForm() {
           disabled={carregando}
           className="w-full rounded-lg bg-blue-500 px-4 py-2.5 text-base font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {carregando ? "Analisando..." : "Entrar"}
+          {carregando ? "Entrando..." : "Entrar"}
         </button>
 
         <hr className="border-gray-300"/>
@@ -104,19 +108,6 @@ export default function LoginForm() {
         <p role="alert" className="mt-4 text-sm text-red-600">
           {erro}
         </p>
-      )}
-
-      {resultado && (
-        <div
-          role="status"
-          className="mt-5 break-words rounded-lg bg-gray-100 p-4 text-sm text-gray-800"
-        >
-          <p>
-            <strong>Classificação:</strong>{" "}
-            {resultado.classificacao}
-          </p>
-          <p className="mt-1">{resultado.mensagem}</p>
-        </div>
       )}
     </div> 
     </section>
