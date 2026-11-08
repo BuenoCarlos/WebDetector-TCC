@@ -42,7 +42,31 @@ export const createScenarioSchema = z.object({
     sql_injection: false,
     xss: false,
     brute_force: false
-  })
+  }),
+ 
+  max_requests: z.number()
+    .int()
+    .min(1, "O mínimo é 1 tentativa.")
+    .max(100, "O máximo é 100 tentativas.")
+    .default(20),
+
+  duration_seconds: z.number()
+    .int()
+    .min(5, "O mínimo é 5 segundos.")
+    .max(120, "O máximo é 120 segundos.")
+    .default(60),
+
+  interval_ms: z.number()
+    .int()
+    .min(1000, "O intervalo mínimo é 1000 ms.")
+    .max(10000, "O intervalo máximo é 10000 ms.")
+    .default(2000),
+
+  request_timeout_ms: z.number()
+    .int()
+    .min(1000, "O timeout mínimo é 1000 ms.")
+    .max(10000, "O timeout máximo é 10000 ms.")
+    .default(5000),
 });
 
 export type CreateScenarioDTO = z.infer<
