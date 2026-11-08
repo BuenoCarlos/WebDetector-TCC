@@ -1,0 +1,37 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif,
+    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+}
+
+html,
+body {
+  @apply bg-white dark:bg-gray-950;
+
+  @media (prefers-color-scheme: dark) {
+    color-scheme: dark;
+  }
+}
+
+.truck-road {
+  --truck-w: 200px; /* celular */
+  background-image: url("/images/caminhaoLogin.png");
+  background-repeat: repeat-x;
+  background-position: 0 50%;
+  background-size: var(--truck-w) auto;
+  animation: truck-road 6s linear infinite;
+}
+
+@media (min-width: 640px) {
+  .truck-road { --truck-w: 280px; } /* tablet */
+}
+
+@media (min-width: 768px) {
+  .truck-road { --truck-w: 450px; } /* desktop */
+}
+
+@keyframes truck-road {
+  from { background-position-x: 0; }
+  to   { background-position-x: calc(var(--truck-w) * -1); }
+}
