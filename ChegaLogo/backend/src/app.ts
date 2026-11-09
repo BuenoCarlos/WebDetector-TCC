@@ -7,6 +7,7 @@ import healthRoutes from "./routes/healthRoutes";
 import authRoutes from "./routes/authRoutes";
 import deliveryRoutes from "./routes/deliveryRoutes";
 import trackingRoutes from "./routes/trackingRoutes";
+import clientRoutes from "./routes/clientRoutes";
 
 import cookieParser from "cookie-parser";
 
@@ -28,3 +29,4 @@ app.use("/api", healthRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/deliveries", deliveryRoutes);
 app.use("/api/tracking", trackingRoutes);
+app.use("/api/clients", clientRoutes);

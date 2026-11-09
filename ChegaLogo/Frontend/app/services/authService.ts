@@ -32,8 +32,6 @@ export async function login(
     body: JSON.stringify(credentials)
   });
 
-  
-
   const data: LoginResponse = await response.json();
 
   if (!response.ok || !data.success) {
@@ -72,4 +70,31 @@ export async function logout(): Promise<void> {
     throw new Error("Erro ao encerrar sessão.");
   }
 }
+
+export async function loginClient(
+  credentials: LoginDTO
+): Promise<LoginResponse> {
+  const response = await fetch(
+    `${API_URL}/clients/login`,
+    {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(credentials),
+    }
+  );
+
+  const data: LoginResponse = await response.json();
+
+  if (!response.ok || !data.success) {
+    throw new Error(
+      data.message || "Não foi possível realizar o login."
+    );
+  }
+
+  return data;
+}
+
 

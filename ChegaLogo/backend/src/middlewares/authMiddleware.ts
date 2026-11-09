@@ -37,3 +37,20 @@ export function requireAuth(
   res.locals.user = user;
   next();
 }
+
+
+export function requireAdmin(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  if (res.locals.user?.role !== "admin") {
+    res.status(403).json({
+      success: false,
+      message: "Acesso restrito à administração.",
+    });
+    return;
+  }
+
+  next();
+}

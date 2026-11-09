@@ -55,14 +55,15 @@ export default function Home() {
 
     async function initialize() {
       try {
-        const currentUser = await getCurrentUser();
+       
+      const currentUser = await getCurrentUser();
 
-        if (!active) return;
+      if (!active) return;
 
-        if (!currentUser) {
-          navigate("/login", { replace: true });
-          return;
-        }
+      if (!currentUser || currentUser.role !== "admin") {
+        navigate("/admin/login", { replace: true });
+        return;
+      }
 
         setUser(currentUser);
 

@@ -43,6 +43,23 @@ export function initDatabase() {
 
     CREATE INDEX IF NOT EXISTS idx_security_events_created
     ON security_events(created_at);
+
+    
+    CREATE TABLE IF NOT EXISTS clients (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        full_name TEXT NOT NULL,
+        username TEXT NOT NULL UNIQUE COLLATE NOCASE,
+        email TEXT NOT NULL UNIQUE COLLATE NOCASE,
+        phone TEXT,
+        password_hash TEXT NOT NULL,
+        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_clients_username
+    ON clients(username);
+
+    CREATE INDEX IF NOT EXISTS idx_clients_email
+    ON clients(email);
   `);
 
   const result = db.prepare(

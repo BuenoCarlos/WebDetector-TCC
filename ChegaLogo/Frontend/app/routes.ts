@@ -6,6 +6,7 @@ export default [
   route("/", "routes/tracking.tsx"),
   route("login", "routes/login.tsx"),
   route("registerUser","routes/registerUser.tsx"),
+  route("client/home", "routes/clientHome.tsx"),
 
   //administrativo
   route("admin/login", "routes/adminLogin.tsx"),

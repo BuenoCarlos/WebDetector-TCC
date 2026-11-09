@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
-import { useNavigate } from "react-router";
-import { login } from "../services/authService";
+import { Link, useNavigate } from "react-router";
+import { loginClient } from "../services/authService";
 
 export default function LoginForm() {
   
@@ -18,13 +18,13 @@ export default function LoginForm() {
     setCarregando(true);
 
     try {
-      const resposta = await login({
+      const resposta = await loginClient({
         username,
         password,
       });
 
-      if (resposta.success) {
-        navigate("/home");
+      if (resposta.success && resposta.user?.role === "client") {
+        navigate("/client/home", { replace: true });
       }
     } catch (error) {
       setErro(
@@ -98,9 +98,10 @@ export default function LoginForm() {
           {carregando ? "Entrando..." : "Entrar"}
         </button>
 
+         <p className="flex justify-end gap-2">Não tem uma conta?
+        <Link to="/registerUser" className="text-blue-500 hover:text-blue-700">Cadastrar</Link> </p> 
+
         <hr className="border-gray-300"/>
-        {/* <p className="flex justify-end gap-2">Não tem uma conta?
-        <Link to="/registerUser" className="text-blue-500 hover:text-blue-700">Cadastrar</Link> </p> */}
         <p className="text-center text-sm text-gray-500">Transportadora ChegaLogo</p>
       </form>
 
