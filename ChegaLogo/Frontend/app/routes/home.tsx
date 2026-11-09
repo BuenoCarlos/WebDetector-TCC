@@ -1,5 +1,4 @@
-
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState, type SyntheticEvent } from "react";
 import { useNavigate } from "react-router";
 
 import {
@@ -100,7 +99,7 @@ export default function Home() {
     };
   }, [navigate]);
 
-  async function handleSearch(event: FormEvent<HTMLFormElement>) {
+  async function handleSearch(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
 
     setSearching(true);

@@ -72,14 +72,14 @@ export default function Tracking() {
       <header className="border-b border-gray-200 bg-white">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-5">
           <Link
-            to="/tracking"
+            to="/"
             className="text-2xl font-bold text-blue-700"
           >
             ChegaLogo
           </Link>
 
           <Link
-            to="/login"
+            to="admin/login"
             className="rounded-lg border border-blue-200 px-4 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-50"
           >
             Área do funcionário
