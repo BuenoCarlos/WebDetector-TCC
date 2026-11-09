@@ -29,6 +29,20 @@ export function initDatabase() {
 
     CREATE INDEX IF NOT EXISTS idx_deliveries_status
       ON deliveries(status);
+      
+    CREATE TABLE IF NOT EXISTS security_events (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        event_type TEXT NOT NULL,
+        request_method TEXT NOT NULL,
+        request_path TEXT NOT NULL,
+        input_length INTEGER NOT NULL DEFAULT 0,
+        response_status INTEGER NOT NULL,
+        duration_ms REAL NOT NULL,
+        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_security_events_created
+    ON security_events(created_at);
   `);
 
   const result = db.prepare(

@@ -1,8 +1,9 @@
-
+import { SecurityEventRepository } from "../repositories/securityEventRepository";
 import type { Request, Response, NextFunction } from "express";
 import { DeliveryService } from "../services/deliveryService";
 
 const service = new DeliveryService();
+const eventRepository = new SecurityEventRepository();
 
 export class DeliveryController {
 
@@ -11,6 +12,8 @@ export class DeliveryController {
     res: Response,
     next: NextFunction
   ) {
+    const startedAt = performance.now();
+
     try {
       const search = req.query.search;
 
@@ -18,25 +21,50 @@ export class DeliveryController {
         search !== undefined &&
         (typeof search !== "string" || search.length > 200)
       ) {
+        const inputLength =
+          typeof search === "string" ? search.length : 0;
+
+        eventRepository.create({
+          eventType: "DELIVERY_SEARCH",
+          requestMethod: "GET",
+          requestPath: "/api/deliveries",
+          inputLength,
+          responseStatus: 400,
+          durationMs: performance.now() - startedAt,
+        });
+
         res.status(400).json({
           success: false,
-          message: "Parâmetro de pesquisa inválido."
+          message: "Parâmetro de pesquisa inválido.",
         });
         return;
       }
 
       const deliveries = service.listDeliveries(search);
 
+      // Registra pesquisas, sem gravar o conteúdo pesquisado.
+      if (typeof search === "string" && search.trim()) {
+        eventRepository.create({
+          eventType: "DELIVERY_SEARCH",
+          requestMethod: "GET",
+          requestPath: "/api/deliveries",
+          inputLength: search.length,
+          responseStatus: 200,
+          durationMs: performance.now() - startedAt,
+        });
+      }
+
       res.status(200).json({
         success: true,
         total: deliveries.length,
-        data: deliveries
+        data: deliveries,
       });
 
     } catch (error) {
       next(error);
     }
   }
+
 
   summary(
     _req: Request,
