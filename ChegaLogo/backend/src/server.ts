@@ -6,7 +6,7 @@ import { initDatabase } from "./database/initDatabase";
 try {
   initDatabase();
 
-  app.listen(env.PORT, "localhost", () => {
+  app.listen(env.PORT, "0.0.0.0", () => {
     console.log(" ChegaLogo - API");
     console.log(`Servidor: http://localhost:${env.PORT}`);
     console.log("Banco: SQLite");

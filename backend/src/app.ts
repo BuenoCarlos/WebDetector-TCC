@@ -5,6 +5,8 @@ import { env } from "./config/env";
 import healthRoutes from "./routes/healthRoutes";
 import scenarioRoutes from "./routes/scenarioRoutes";
 import routeRoutes from "./routes/routeRoutes";
+import integrationRoutes from "./routes/integrationRoutes";
+
 import { errorHandler } from "./middlewares/errorHandler";
 
 export const app = express();
@@ -19,5 +21,6 @@ app.use(express.json({ limit: "100kb" }));
 app.use("/api", healthRoutes);
 app.use("/api", scenarioRoutes);
 app.use("/api", routeRoutes);
+app.use("/api", integrationRoutes);
 
 app.use(errorHandler);
