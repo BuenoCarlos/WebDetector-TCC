@@ -7,5 +7,6 @@ export default [
     route("compararCenarios", "routes/compararCenarios.tsx"),
     route("monitoramento", "routes/monitoramento.tsx"),
     route("relatorios", "routes/relatorios.tsx"),
+    
 ]),
 ] satisfies RouteConfig;

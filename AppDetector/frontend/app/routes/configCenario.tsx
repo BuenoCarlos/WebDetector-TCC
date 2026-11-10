@@ -1,5 +1,6 @@
 import { useEffect, useState, type SyntheticEvent, } from "react";
 import ScenarioRoutes from "../components/scenarios/ScenarioRoutes";
+import ScenarioExecutor from "../components/scenarios/ScenarioExecutor";
 
 import {
   createScenario,
@@ -514,6 +515,7 @@ export default function ConfigCenario() {
         )}
       </section>
       <ScenarioRoutes scenarios={scenarios} />
+      <ScenarioExecutor scenarios={scenarios} />
     </main>
   );
 }

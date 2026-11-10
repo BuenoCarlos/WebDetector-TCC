@@ -79,6 +79,13 @@ export default function Tracking() {
           </Link>
 
           <Link
+            to="/login"
+            className="rounded-lg border border-blue-200 px-4 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-50"
+          >
+            Área do Cliente
+          </Link>
+
+          <Link
             to="admin/login"
             className="rounded-lg border border-blue-200 px-4 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-50"
           >

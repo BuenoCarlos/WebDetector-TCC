@@ -6,6 +6,8 @@ import healthRoutes from "./routes/healthRoutes";
 import scenarioRoutes from "./routes/scenarioRoutes";
 import routeRoutes from "./routes/routeRoutes";
 import integrationRoutes from "./routes/integrationRoutes";
+import runRoutes from "./routes/runRoutes";
+
 
 import { errorHandler } from "./middlewares/errorHandler";
 
@@ -22,5 +24,6 @@ app.use("/api", healthRoutes);
 app.use("/api", scenarioRoutes);
 app.use("/api", routeRoutes);
 app.use("/api", integrationRoutes);
+app.use("/api", runRoutes);
 
 app.use(errorHandler);
