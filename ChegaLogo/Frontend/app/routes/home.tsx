@@ -1,5 +1,5 @@
 import { useEffect, useState, type SyntheticEvent } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, Link } from "react-router";
 
 import {
   getCurrentUser,
@@ -188,6 +188,12 @@ export default function Home() {
             </p>
           </div>
 
+          <Link
+            to="/admin/support"
+            className="rounded-lg border border-blue-200 px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50">
+            Solicitações
+          </Link>
+
           <div className="flex items-center gap-4">
             <div className="hidden text-right sm:block">
               <p className="text-sm font-semibold text-gray-800">
@@ -207,6 +213,7 @@ export default function Home() {
               {loggingOut ? "Saindo..." : "Sair"}
             </button>
           </div>
+          
         </div>
       </header>
 

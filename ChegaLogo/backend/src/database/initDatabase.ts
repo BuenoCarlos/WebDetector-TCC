@@ -60,6 +60,24 @@ export function initDatabase() {
 
     CREATE INDEX IF NOT EXISTS idx_clients_email
     ON clients(email);
+
+
+    CREATE TABLE IF NOT EXISTS support_tickets (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      client_id INTEGER NOT NULL,
+      subject TEXT NOT NULL,
+      message TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'ABERTO'
+        CHECK (status IN ('ABERTO', 'EM_ANALISE', 'RESOLVIDO')),
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (client_id) REFERENCES clients(id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_support_client
+    ON support_tickets(client_id);
+
+    CREATE INDEX IF NOT EXISTS idx_support_created
+    ON support_tickets(created_at);
   `);
 
   const result = db.prepare(

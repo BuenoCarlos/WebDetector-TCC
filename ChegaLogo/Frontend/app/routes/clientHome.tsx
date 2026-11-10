@@ -256,6 +256,12 @@ export default function ClientHome() {
               >
                 Minha conta
               </button>
+              <Link
+                to="/client/support"
+                className="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-gray-600 transition hover:bg-gray-100"
+                >
+                Suporte
+              </Link>
             </nav>
 
             <div className="border-t border-gray-100 pt-4">
