@@ -1,6 +1,4 @@
 import { useEffect, useState, type SyntheticEvent, } from "react";
-import ScenarioRoutes from "../components/scenarios/ScenarioRoutes";
-import ScenarioExecutor from "../components/scenarios/ScenarioExecutor";
 
 import {
   createScenario,
@@ -10,10 +8,14 @@ import {
   type Scenario,
 } from "../services/scenarioService";
 
+import {
+  discoverRoutes,
+  type AvailableRoute,
+} from "../services/labDiscoveryService"
+
 const attackOptions: AttackType[] = [
   "SQL Injection",
   "XSS",
-  "Brute Force",
 ];
 
 const initialForm: CreateScenarioDTO = {
@@ -21,10 +23,10 @@ const initialForm: CreateScenarioDTO = {
   description: "",
   base_url: "",
   attack_types: [],
+  routes: [],
   defenses: {
     sql_injection: false,
     xss: false,
-    brute_force: false,
   },
   max_requests: 20,
   duration_seconds: 60,
@@ -44,6 +46,68 @@ export default function ConfigCenario() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+
+
+  const [availableRoutes, setAvailableRoutes] =
+    useState<AvailableRoute[]>([]);
+
+  const [discovering, setDiscovering] = useState(false);
+
+  const [routesError, setRoutesError] = useState("");
+
+  async function handleDiscoverRoutes() {
+    setDiscovering(true);
+    setRoutesError("");
+    setAvailableRoutes([]);
+
+    setForm((previous) => ({
+      ...previous,
+      routes: [],
+    }));
+
+    try {
+      const routes = await discoverRoutes(
+        form.base_url
+      );
+
+      setAvailableRoutes(routes);
+    } catch (error) {
+      setRoutesError(
+        error instanceof Error
+          ? error.message
+          : "Erro ao buscar as rotas."
+      );
+    } finally {
+      setDiscovering(false);
+    }
+  }
+
+  function toggleRoute(route: AvailableRoute) {
+    setForm((previous) => {
+      const exists = previous.routes.some(
+        (item) =>
+          item.path === route.path &&
+          item.method === route.method
+      );
+
+      return {
+        ...previous,
+        routes: exists
+          ? previous.routes.filter(
+            (item) =>
+              item.path !== route.path ||
+              item.method !== route.method
+          )
+          : [
+            ...previous.routes,
+            {
+              path: route.path,
+              method: route.method,
+            },
+          ],
+      };
+    });
+  }
 
   async function loadScenarios() {
     try {
@@ -148,16 +212,19 @@ export default function ConfigCenario() {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
+
         <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
           <h2 className="mb-5 text-lg font-semibold text-gray-900">
             Informações do cenário
           </h2>
 
           <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+
             <div>
               <label
                 htmlFor="scenario-name"
-                className="mb-2 block text-sm font-medium text-gray-700">
+                className="mb-2 block text-sm font-medium text-gray-700"
+              >
                 Nome do cenário *
               </label>
               <input
@@ -177,10 +244,12 @@ export default function ConfigCenario() {
               />
             </div>
 
+
             <div>
               <label
                 htmlFor="scenario-url"
-                className="mb-2 block text-sm font-medium text-gray-700">
+                className="mb-2 block text-sm font-medium text-gray-700"
+              >
                 URL da aplicação *
               </label>
               <input
@@ -199,16 +268,49 @@ export default function ConfigCenario() {
               />
             </div>
 
-            <div className="md:col-span-2">
+
+            <div className="rounded-xl border border-gray-200 p-5">
+              <h2 className="text-lg font-semibold text-gray-900">
+                Tipos de ataque
+              </h2>
+
+              <p className="mb-5 mt-1 text-sm text-gray-500">
+                Selecione os tipos que deseja avaliar.
+              </p>
+
+              <div className="space-y-3">
+                {attackOptions.map((attack) => (
+                  <label
+                    key={attack}
+                    className="flex cursor-pointer items-center gap-3 rounded-lg border border-gray-200 p-4 hover:bg-gray-50"
+                  >
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 rounded border-gray-300 accent-blue-600"
+                      checked={form.attack_types.includes(attack)}
+                      onChange={() => toggleAttack(attack)}
+                    />
+
+                    <span className="text-sm font-medium text-gray-800">
+                      {attack}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+
+            <div>
               <label
                 htmlFor="scenario-description"
-                className="mb-2 block text-sm font-medium text-gray-700">
+                className="mb-2 block text-sm font-medium text-gray-700"
+              >
                 Descrição
               </label>
               <textarea
                 id="scenario-description"
                 className={inputClass}
-                rows={3}
+                rows={5}
                 maxLength={2000}
                 placeholder="Descreva o objetivo do cenário..."
                 value={form.description}
@@ -220,75 +322,82 @@ export default function ConfigCenario() {
                 }
               />
             </div>
+
+
+            <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm md:col-span-2">
+              <h2 className="text-lg font-semibold text-slate-900">
+                Rotas da aplicação
+              </h2>
+
+              <p className="mt-1 text-sm text-slate-500">
+                Conforme a URL fornecida acima segue as opções de endpoints disponíveis para os testes.
+              </p>
+
+              <button
+                type="button"
+                onClick={() => void handleDiscoverRoutes()}
+                disabled={discovering || !form.base_url}
+                className="mt-4 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+              >
+                {discovering
+                  ? "Buscando rotas..."
+                  : "Buscar rotas automaticamente"}
+              </button>
+
+              {routesError && (
+                <p className="mt-3 text-sm text-red-600">
+                  {routesError}
+                </p>
+              )}
+
+              <div className="mt-5 grid grid-cols-1 gap-2 md:grid-cols-2">
+                {availableRoutes.map((route) => {
+                  const selected = form.routes.some(
+                    (item) =>
+                      item.path === route.path &&
+                      item.method === route.method
+                  );
+
+                  return (
+                    <label
+                      key={`${route.method}-${route.path}`}
+                      className="flex cursor-pointer items-center gap-3 rounded-xl border border-slate-200 p-3 hover:bg-slate-50"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selected}
+                        onChange={() => toggleRoute(route)}
+                        className="h-4 w-4 accent-blue-600"
+                      />
+
+                      <span className="rounded bg-blue-50 px-2 py-1 text-xs font-bold text-blue-700">
+                        {route.method}
+                      </span>
+
+                      <div className="min-w-0">
+                        <p className="break-all text-sm font-medium text-slate-800">
+                          {route.path}
+                        </p>
+
+                        <p className="text-xs text-slate-500">
+                          {route.name}
+                        </p>
+                      </div>
+                    </label>
+                  );
+                })}
+              </div>
+
+              {availableRoutes.length > 0 && (
+                <p className="mt-4 text-sm text-blue-600">
+                  {form.routes.length} rota(s) selecionada(s)
+                </p>
+              )}
+            </section>
+
           </div>
         </section>
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-            <h2 className="text-lg font-semibold text-gray-900">
-              Tipos de ataque
-            </h2>
-            <p className="mb-5 mt-1 text-sm text-gray-500">
-              Selecione os tipos que deseja avaliar.
-            </p>
-
-            <div className="space-y-3">
-              {attackOptions.map((attack) => (
-                <label
-                  key={attack}
-                  className="flex cursor-pointer items-center gap-3 rounded-lg border border-gray-200 p-4 hover:bg-gray-50">
-                  <input
-                    type="checkbox"
-                    className="h-4 w-4 rounded border-gray-300 accent-blue-600"
-                    checked={form.attack_types.includes(attack)}
-                    onChange={() => toggleAttack(attack)}
-                  />
-                  <span className="text-sm font-medium text-gray-800">
-                    {attack}
-                  </span>
-                </label>
-              ))}
-            </div>
-          </section>
-
-          <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-            <h2 className="text-lg font-semibold text-gray-900">
-              Defesas para avaliação
-            </h2>
-            <p className="mb-5 mt-1 text-sm text-gray-500">
-              Registre quais proteções devem estar habilitadas no ambiente.
-            </p>
-
-            <div className="space-y-3">
-              {(
-                [
-                  ["sql_injection", "Proteção contra SQL Injection"],
-                  ["xss", "Proteção contra XSS"],
-                  ["brute_force", "Proteção contra Brute Force"],
-                ] as const
-              ).map(([key, label]) => (
-                <label
-                  key={key}
-                  className="flex cursor-pointer items-center justify-between gap-3 rounded-lg border border-gray-200 p-4 hover:bg-gray-50">
-                  <span className="text-sm font-medium text-gray-800">
-                    {label}
-                  </span>
-                  <input
-                    type="checkbox"
-                    className="h-4 w-4 accent-blue-600"
-                    checked={form.defenses[key]}
-                    onChange={() => toggleDefense(key)}
-                  />
-                </label>
-              ))}
-            </div>
-
-            <p className="mt-4 text-xs text-gray-500">
-              Esta configuração não ativa proteções automaticamente
-              na aplicação-alvo.
-            </p>
-          </section>
-        </div>
 
         <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
           <div className="mb-5">
@@ -514,8 +623,6 @@ export default function ConfigCenario() {
           </div>
         )}
       </section>
-      <ScenarioRoutes scenarios={scenarios} />
-      <ScenarioExecutor scenarios={scenarios} />
     </main>
   );
 }

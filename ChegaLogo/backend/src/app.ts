@@ -9,6 +9,8 @@ import deliveryRoutes from "./routes/deliveryRoutes";
 import trackingRoutes from "./routes/trackingRoutes";
 import clientRoutes from "./routes/clientRoutes";
 import supportRoutes from "./routes/supportRoutes";
+import { openapiSpec } from "./config/openapi";
+import labLoginRoutes from "./routes/labLoginRoutes";
 
 import cookieParser from "cookie-parser";
 
@@ -30,5 +32,14 @@ app.use("/api", healthRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/deliveries", deliveryRoutes);
 app.use("/api/tracking", trackingRoutes);
+if (env.NODE_ENV !== "production") {
+  app.use("/api/lab", labLoginRoutes);
+}
 app.use("/api/clients", clientRoutes);
 app.use("/api/support", supportRoutes);
+
+if (process.env.NODE_ENV !== "production") {
+  app.get("/openapi.json", (_req, res) => {
+    res.json(openapiSpec);
+  });
+}

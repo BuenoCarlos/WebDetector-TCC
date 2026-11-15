@@ -34,19 +34,22 @@ export default function Navbar() {
           </h1>
         </div>
 
-        <div className="flex shrink-0 items-center gap-3">
-          <Button
-            color="blue"
-            size="sm"
-            onClick={() => {
-              window.location.href = "/configCenario";
-            }}>
-            <HiOutlineAdjustments className="mr-2 h-4 w-4" />
-            <span className="hidden sm:inline">
-              Novo cenário
-            </span>
-          </Button>
-        </div>
+        {location.pathname !== "/configCenario" && (
+          <div className="flex shrink-0 items-center gap-3">
+            <Button
+              color="blue"
+              size="sm"
+              onClick={() => {
+                window.location.href = "/configCenario";
+              }}
+            >
+              <HiOutlineAdjustments className="mr-2 h-4 w-4" />
+              <span className="hidden sm:inline">
+                Novo cenário
+              </span>
+            </Button>
+          </div>
+        )}
       </div>
     </header>
   );

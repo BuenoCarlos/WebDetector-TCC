@@ -5,9 +5,12 @@ export default [
   //publico
   route("/", "routes/tracking.tsx"),
   route("login", "routes/login.tsx"),
-  route("registerUser","routes/registerUser.tsx"),
+  route("registerUser", "routes/registerUser.tsx"),
   route("client/home", "routes/clientHome.tsx"),
   route("client/support", "routes/clientSupport.tsx"),
+
+  //testes
+  route("lab/login", "routes/labLogin.tsx"),
 
   //administrativo
   route("admin/login", "routes/adminLogin.tsx"),

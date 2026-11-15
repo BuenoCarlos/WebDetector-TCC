@@ -55,15 +55,15 @@ export default function Home() {
 
     async function initialize() {
       try {
-       
-      const currentUser = await getCurrentUser();
 
-      if (!active) return;
+        const currentUser = await getCurrentUser();
 
-      if (!currentUser || currentUser.role !== "admin") {
-        navigate("/admin/login", { replace: true });
-        return;
-      }
+        if (!active) return;
+
+        if (!currentUser || currentUser.role !== "admin") {
+          navigate("/admin/login", { replace: true });
+          return;
+        }
 
         setUser(currentUser);
 
@@ -139,27 +139,27 @@ export default function Home() {
 
   const cards = summary
     ? [
-        {
-          label: "Total de entregas",
-          value: summary.totalDeliveries,
-          color: "text-blue-600",
-        },
-        {
-          label: "Em trânsito",
-          value: summary.inTransit,
-          color: "text-sky-600",
-        },
-        {
-          label: "Entregues",
-          value: summary.delivered,
-          color: "text-green-600",
-        },
-        {
-          label: "Atrasadas",
-          value: summary.delayed,
-          color: "text-red-600",
-        },
-      ]
+      {
+        label: "Total de entregas",
+        value: summary.totalDeliveries,
+        color: "text-blue-600",
+      },
+      {
+        label: "Em trânsito",
+        value: summary.inTransit,
+        color: "text-sky-600",
+      },
+      {
+        label: "Entregues",
+        value: summary.delivered,
+        color: "text-green-600",
+      },
+      {
+        label: "Atrasadas",
+        value: summary.delayed,
+        color: "text-red-600",
+      },
+    ]
     : [];
 
   if (loading) {
@@ -176,7 +176,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Cabeçalho */}
+
       <header className="border-b border-gray-200 bg-white">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-6 py-5">
           <div>
@@ -213,7 +213,7 @@ export default function Home() {
               {loggingOut ? "Saindo..." : "Sair"}
             </button>
           </div>
-          
+
         </div>
       </header>
 
@@ -236,7 +236,6 @@ export default function Home() {
           </div>
         )}
 
-        {/* Indicadores */}
         <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {cards.map((card) => (
             <div
@@ -253,7 +252,6 @@ export default function Home() {
           ))}
         </section>
 
-        {/* Entregas */}
         <section className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
           <div className="flex flex-col gap-4 border-b border-gray-100 p-5 lg:flex-row lg:items-center lg:justify-between">
             <div>
@@ -332,9 +330,8 @@ export default function Home() {
                       </td>
                       <td className="px-5 py-4">
                         <span
-                          className={`inline-block whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium ${
-                            statusClasses[delivery.status]
-                          }`}
+                          className={`inline-block whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium ${statusClasses[delivery.status]
+                            }`}
                         >
                           {statusLabels[delivery.status]}
                         </span>

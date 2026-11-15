@@ -3,12 +3,8 @@ import { useState } from "react";
 import { Button } from "flowbite-react";
 
 import {
-  HiOutlineViewGrid,
-  HiOutlineCog,
   HiOutlineChevronLeft,
   HiOutlineChevronRight,
-  HiOutlineScale,
-  HiOutlineDocumentReport,
 } from "react-icons/hi";
 
 export default function Sidebar() {
@@ -19,17 +15,14 @@ export default function Sidebar() {
     {
       nome: "Dashboard",
       caminho: "/",
-      icone: HiOutlineViewGrid,
     },
     {
       nome: "Cenário",
       caminho: "/configCenario",
-      icone: HiOutlineCog,
     },
     {
       nome: "Comparar cenários",
       caminho: "/compararCenarios",
-      icone: HiOutlineScale,
     },
     {
       nome: "Monitoramento",
@@ -38,7 +31,7 @@ export default function Sidebar() {
     {
       nome: "Relatórios",
       caminho: "/relatorios",
-      icone: HiOutlineDocumentReport,
+
     },
   ];
 
@@ -62,7 +55,6 @@ export default function Sidebar() {
       <div className="px-4 py-5">
         <nav className="space-y-2">
           {itens.map((item) => {
-            const Icon = item.icone;
             const ativo =
               location.pathname === item.caminho;
             return (

@@ -4,12 +4,15 @@ const API_URL =
 export type AttackType =
   | "SQL Injection"
   | "XSS"
-  | "Brute Force";
+
+export interface SelectedRoute {
+  path: string;
+  method: "GET" | "POST";
+}
 
 export interface ScenarioDefenses {
   sql_injection: boolean;
   xss: boolean;
-  brute_force: boolean;
 }
 
 export interface Scenario {
@@ -36,6 +39,7 @@ export interface CreateScenarioDTO {
   duration_seconds: number;
   interval_ms: number;
   request_timeout_ms: number;
+  routes: SelectedRoute[];
 }
 
 async function parseResponse(response: Response) {

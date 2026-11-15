@@ -162,26 +162,26 @@ export default function RegisterUser() {
                 <label htmlFor="phone" className={labelClass}>
                   Telefone (opcional)
                 </label>
-                  <input
-                    id="phone"
-                    type="text"
-                    inputMode="numeric"
-                    autoComplete="tel"
-                    value={form.phone}
-                    onChange={(e) => {
-                      const apenasNumeros = e.target.value
-                        .replace(/\D/g, "")
-                        .slice(0, 11);
+                <input
+                  id="phone"
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="tel"
+                  value={form.phone}
+                  onChange={(e) => {
+                    const apenasNumeros = e.target.value
+                      .replace(/\D/g, "")
+                      .slice(0, 11);
 
-                      updateField("phone", apenasNumeros);
-                    }}
-                    minLength={10}
-                    maxLength={11}
-                    pattern="[0-9]{10,11}"
-                    title="Informe 10 ou 11 números, incluindo o DDD"
-                    placeholder="54999999999"
-                    className={inputClass}
-                  />
+                    updateField("phone", apenasNumeros);
+                  }}
+                  minLength={10}
+                  maxLength={11}
+                  pattern="[0-9]{10,11}"
+                  title="Informe 10 ou 11 números, incluindo o DDD"
+                  placeholder="54999999999"
+                  className={inputClass}
+                />
               </div>
             </div>
 

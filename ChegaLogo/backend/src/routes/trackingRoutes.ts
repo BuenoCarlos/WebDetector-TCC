@@ -1,4 +1,3 @@
-
 import { Router } from "express";
 import { rateLimit } from "express-rate-limit";
 import { TrackingController } from "../controllers/trackingController";
@@ -17,6 +16,26 @@ const trackingLimiter = rateLimit({
   },
 });
 
+/**
+ * @openapi
+ * /api/tracking/{code}:
+ *   get:
+ *     summary: Consultar rastreamento de entrega
+ *     tags:
+ *       - Rastreamento
+ *     parameters:
+ *       - in: path
+ *         name: code
+ *         required: true
+ *         schema:
+ *           type: string
+ *         example: CHG20260001
+ *     responses:
+ *       200:
+ *         description: Rastreamento encontrado
+ *       404:
+ *         description: Rastreamento não encontrado
+ */
 router.get(
   "/:code",
   trackingLimiter,

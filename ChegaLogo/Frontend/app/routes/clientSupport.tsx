@@ -1,4 +1,3 @@
-
 import { useEffect, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router";
 
@@ -252,9 +251,8 @@ export default function ClientSupport() {
                     </h3>
 
                     <span
-                      className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                        statusColors[ticket.status]
-                      }`}
+                      className={`rounded-full px-3 py-1 text-xs font-semibold ${statusColors[ticket.status]
+                        }`}
                     >
                       {statusLabels[ticket.status]}
                     </span>

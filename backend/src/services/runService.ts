@@ -29,8 +29,8 @@ function validateTarget(
   const baseUrl = new URL(scenario.base_url);
 
   const allowedOrigins = new Set([
-    "http://localhost:8000",
-    "http://127.0.0.1:8000",
+    "http://localhost:",
+    "http://127.0.0.1:",
   ]);
 
   if (

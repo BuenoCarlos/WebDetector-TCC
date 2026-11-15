@@ -1,4 +1,3 @@
-
 import { app } from "./app";
 import { env } from "./config/env";
 import { initDatabase } from "./database/initDatabase";

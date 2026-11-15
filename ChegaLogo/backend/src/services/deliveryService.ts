@@ -1,10 +1,8 @@
-
 import { DeliveryRepository } from "../repositories/deliveryRepository";
 
 export class DeliveryService {
   private repository = new DeliveryRepository();
 
-  // Lista todas as entregas ou pesquisa pelo termo informado
   listDeliveries(search?: string) {
     if (!search?.trim()) {
       return this.repository.findAll();
@@ -13,12 +11,10 @@ export class DeliveryService {
     return this.repository.search(search.trim());
   }
 
-  // Busca uma entrega pelo ID
   getDelivery(id: number) {
     return this.repository.findById(id);
   }
 
-  // Retorna os indicadores do Dashboard
   getSummary() {
     const deliveries = this.repository.findAll();
 
