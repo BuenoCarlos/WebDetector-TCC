@@ -1,3 +1,4 @@
+import { saveSourcePath } from "../services/sourceAnalysisService";
 import { useEffect, useState, type SyntheticEvent, } from "react";
 
 import {
@@ -42,10 +43,12 @@ export default function ConfigCenario() {
   });
 
   const [scenarios, setScenarios] = useState<Scenario[]>([]);
+  const [showAllScenarios, setShowAllScenarios] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [sourcePath, setSourcePath] = useState("");
 
 
   const [availableRoutes, setAvailableRoutes] =
@@ -164,6 +167,15 @@ export default function ConfigCenario() {
       setSaving(true);
       const created = await createScenario(form);
       setScenarios((previous) => [created, ...previous]);
+      if (sourcePath.trim()) {
+        try {
+          await saveSourcePath(created.id, sourcePath.trim());
+          setSourcePath("");
+        } catch (err) {
+          setError("Cenário criado, mas não foi possível vincular o código-fonte: " +
+            (err instanceof Error ? err.message : "caminho inválido"));
+        }
+      }
       setForm({
         ...initialForm,
         attack_types: [],
@@ -184,6 +196,9 @@ export default function ConfigCenario() {
   const inputClass =
     "w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100";
 
+const visibleScenarios = showAllScenarios
+  ? scenarios
+  : scenarios.slice(0, 6);
   return (
     <main className="space-y-6 p-4 md:p-6">
       <div>
@@ -532,6 +547,16 @@ export default function ConfigCenario() {
           </div>
         </section>
 
+        <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <h2 className="text-lg font-semibold text-slate-900">Análise estática (opcional)</h2>
+          <p className="mb-3 mt-1 text-sm text-slate-500">Informe a pasta do código-fonte disponível no computador do backend Node. Você também pode configurar isso depois no Monitoramento.</p>
+          <label htmlFor="scenario-source" className="mb-2 block text-sm font-medium text-slate-700">Caminho do código-fonte (opcional)</label>
+          <input id="scenario-source" type="text" value={sourcePath}
+            onChange={(e) => setSourcePath(e.target.value)}
+            placeholder="C:\Projetos\WebDetector-TCC\ChegaLogo"
+            className={inputClass} />
+        </section>
+
         <div className="flex justify-end">
           <button
             type="submit"
@@ -582,7 +607,7 @@ export default function ConfigCenario() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {scenarios.map((scenario) => (
+                {visibleScenarios.map((scenario) => (
                   <tr key={scenario.id} className="hover:bg-gray-50">
                     <td className="px-4 py-4">
                       <p className="font-medium text-gray-900">
@@ -619,7 +644,25 @@ export default function ConfigCenario() {
                   </tr>
                 ))}
               </tbody>
+            
             </table>
+          </div>
+        )}
+
+        {!loading && scenarios.length > 6 && (
+          <div className="mt-4 flex justify-center border-t border-slate-100 pt-4">
+            <button
+              type="button"
+              onClick={() =>
+                setShowAllScenarios((previous) => !previous)
+              }
+              aria-expanded={showAllScenarios}
+              className="rounded-lg px-5 py-2.5 text-sm font-semibold text-blue-600 transition hover:bg-blue-50 hover:text-blue-700"
+            >
+              {showAllScenarios
+                ? "Ver menos"
+                : `Ver mais (${scenarios.length - 6} restantes)`}
+            </button>
           </div>
         )}
       </section>

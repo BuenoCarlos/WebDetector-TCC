@@ -1,16 +1,13 @@
+import sastRoutes from "./routes/sastRoutes";
 import express from "express";
 import cors from "cors";
 
 import { env } from "./config/env";
 import healthRoutes from "./routes/healthRoutes";
 import scenarioRoutes from "./routes/scenarioRoutes";
-import routeRoutes from "./routes/routeRoutes";
-import integrationRoutes from "./routes/integrationRoutes";
-import runRoutes from "./routes/runRoutes";
-import mlLabRoutes from "./routes/mlLabRoutes";
 import discoveryRoutes from "./routes/discoveryRoutes";
-import sqlInjectionTestRoutes from "./routes/sqlInjectionTestRoutes";
 import securityEvaluationRoutes from "./routes/securityEvaluationRoutes";
+import applicationScanRoutes from "./routes/applicationScanRoutes";
 
 import { errorHandler } from "./middlewares/errorHandler";
 
@@ -24,13 +21,11 @@ app.use(cors({
 app.use(express.json({ limit: "100kb" }));
 
 app.use("/api", healthRoutes);
-app.use("/api", scenarioRoutes);
-app.use("/api", routeRoutes);
-app.use("/api", integrationRoutes);
-app.use("/api", runRoutes);
-app.use("/api", mlLabRoutes);
+app.use("/api", scenarioRoutes);;
 app.use("/api", discoveryRoutes);
-app.use("/api", sqlInjectionTestRoutes);
 app.use("/api", securityEvaluationRoutes);
+app.use("/api", applicationScanRoutes);
+
+app.use("/api", sastRoutes);
 
 app.use(errorHandler);

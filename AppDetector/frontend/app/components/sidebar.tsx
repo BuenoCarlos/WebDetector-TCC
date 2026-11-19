@@ -1,11 +1,5 @@
 import { Link, useLocation } from "react-router";
 import { useState } from "react";
-import { Button } from "flowbite-react";
-
-import {
-  HiOutlineChevronLeft,
-  HiOutlineChevronRight,
-} from "react-icons/hi";
 
 export default function Sidebar() {
   const location = useLocation();
@@ -18,7 +12,7 @@ export default function Sidebar() {
     },
     {
       nome: "Cenário",
-      caminho: "/configCenario",
+      caminho: "/cenario",
     },
     {
       nome: "Comparar cenários",
@@ -74,22 +68,6 @@ export default function Sidebar() {
             );
           })}
         </nav>
-      </div>
-
-      <div className="mt-auto px-4 pb-5">
-        <Button
-          size="sm"
-          className="w-full bg-slate-100 text-slate-700 hover:bg-slate-200"
-          onClick={() => setRecolhida(!recolhida)}>
-          {recolhida ? (
-            <HiOutlineChevronRight className="h-5 w-5" />
-          ) : (
-            <>
-              <HiOutlineChevronLeft className="mr-2 h-4 w-4" />
-              Recolher menu
-            </>
-          )}
-        </Button>
       </div>
     </aside>
   );

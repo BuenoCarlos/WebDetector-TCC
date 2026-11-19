@@ -1,0 +1,61 @@
+﻿id,classe_esperada,payload
+NORM-01,norm,cliente_teste_001
+NORM-02,norm,cliente_teste_002
+NORM-03,norm,cliente_teste_003
+NORM-04,norm,cliente_teste_004
+NORM-05,norm,cliente_teste_005
+NORM-06,norm,cliente_teste_006
+NORM-07,norm,cliente_teste_007
+NORM-08,norm,cliente_teste_008
+NORM-09,norm,cliente_teste_009
+NORM-10,norm,cliente_teste_010
+NORM-11,norm,visitante_local_001
+NORM-12,norm,visitante_local_002
+NORM-13,norm,visitante_local_003
+NORM-14,norm,visitante_local_004
+NORM-15,norm,visitante_local_005
+NORM-16,norm,visitante_local_006
+NORM-17,norm,visitante_local_007
+NORM-18,norm,visitante_local_008
+NORM-19,norm,visitante_local_009
+NORM-20,norm,visitante_local_010
+SQLI-01,sqli,' OR '1'='1' -- 
+SQLI-02,sqli,' OR 1=1 -- 
+SQLI-03,sqli,admin' OR 'a'='a' -- 
+SQLI-04,sqli,' OR (3*3)=9 -- 
+SQLI-05,sqli,' OR LENGTH('abcd')=4 -- 
+SQLI-06,sqli,' OR 'texto' LIKE 'tex%' -- 
+SQLI-07,sqli,' OR '4'='4' /* 
+SQLI-08,sqli,' OR 7>=7 -- 
+SQLI-09,sqli,' OR 9<>8 -- 
+SQLI-10,sqli,' OR 'Z'='Z' -- 
+SQLI-11,sqli,x' OR '5'='5' -- 
+SQLI-12,sqli,' oR 15=15 -- 
+SQLI-13,sqli,' OR (8-3)=5 -- 
+SQLI-14,sqli,' OR UPPER('ab')='AB' -- 
+SQLI-15,sqli,' OR LENGTH('xyz')>2 -- 
+SQLI-16,sqli,' OR 'gh' LIKE 'g%' -- 
+SQLI-17,sqli,' OR 101=101 -- 
+SQLI-18,sqli,' OR (12/3)=4 -- 
+SQLI-19,sqli,' OR 'zero'!='um' -- 
+SQLI-20,sqli,' OR (2+5)=7 -- 
+XSS-01,xss,<script>alert('webdetector-01')</script>
+XSS-02,xss,<img src=x onerror=alert('wd-02')>
+XSS-03,xss,<svg onload=alert('wd-03')>
+XSS-04,xss,<button onclick=alert('wd-04')>Ver</button>
+XSS-05,xss,<div onmouseover=alert('wd-05')>Teste</div>
+XSS-06,xss,<input onfocus=alert('wd-06') autofocus>
+XSS-07,xss,<details open ontoggle=alert('wd-07')>OK</details>
+XSS-08,xss,<a href=javascript:alert('wd-08')>Abrir</a>
+XSS-09,xss,"<iframe srcdoc=""<script>alert('wd-09')</script>""></iframe>"
+XSS-10,xss,<svg><script>alert('wd-10')</script></svg>
+XSS-11,xss,<img src=invalid onerror=console.log('wd-11')>
+XSS-12,xss,<body onload=console.log('wd-12')>
+XSS-13,xss,<marquee onstart=console.log('wd-13')>Teste</marquee>
+XSS-14,xss,<video onerror=console.log('wd-14') src=invalid></video>
+XSS-15,xss,<audio onerror=console.log('wd-15') src=invalid></audio>
+XSS-16,xss,<object data=javascript:alert('wd-16')></object>
+XSS-17,xss,<form><button formaction=javascript:alert('wd-17')>Ir</button></form>
+XSS-18,xss,<svg><animate onbegin=alert('wd-18') attributeName=x></animate></svg>
+XSS-19,xss,<input onblur=console.log('wd-19')>
+XSS-20,xss,<div onpointerenter=alert('wd-20')>Aqui</div>

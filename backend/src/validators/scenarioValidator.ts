@@ -11,7 +11,7 @@ export const createScenarioSchema = z.object({
         u.pathname === "/" && !u.search && !u.hash && !u.username && !u.password;
     } catch { return false; }
   }, "Informe http://localhost:PORTA ou http://127.0.0.1:PORTA."),
-  attack_types: z.array(z.enum(["SQL Injection", "XSS", "Brute Force"]))
+  attack_types: z.array(z.enum(["SQL Injection", "XSS"]))
     .min(1, "Selecione um ataque."),
   defenses: z.object({
     sql_injection: z.boolean().default(false),

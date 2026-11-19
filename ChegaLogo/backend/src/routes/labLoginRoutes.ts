@@ -31,8 +31,22 @@ labDb.exec(`
  *     tags:
  *       - Laboratório de Segurança
  *
+ 
  *     x-webdetector-safe-to-test: true
- *     x-webdetector-auth: true
+ *     x-webdetector-test:
+ *       kind: authentication
+ *       baseline:
+ *         username: webdetector_inexistente
+ *         password: SenhaInvalida_LAB_2026
+ *       auth:
+ *         confirmation_mode: response
+ *         success_fields:
+ *           - success
+ *           - lab_authenticated
+ *         identity_fields:
+ *           - users
+ *         session_cookie_names: []
+
  *
  *     requestBody:
  *       required: true

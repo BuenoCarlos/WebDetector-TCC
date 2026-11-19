@@ -1,0 +1,27 @@
+# Semgrep - regras baixadas
+backend/security-rules/
+
+# Semgrep - cache e resultados locais
+.semgrep/
+.semgrep_logs/
+.semgrep-cache/
+.semgrep_results/
+.semgrep_results.json
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# Node.js
+node_modules/
+dist/
+build/
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
