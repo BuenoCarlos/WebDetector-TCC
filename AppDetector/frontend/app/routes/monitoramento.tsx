@@ -1,9 +1,8 @@
 import CodeAnalysisPanel from "../components/security/CodeAnalysisPanel";
 import { useEffect, useState } from "react";
 import ApplicationScanPanel from "../components/security/ApplicationScanPanel";
-import {
-  baixarPdfAvaliacaoDetalhado,
-} from "../services/pdfReportService";
+import { baixarPdfAvaliacaoDetalhado } from "../services/pdfReportService";
+import { interpretarML } from "../services/mlInterpretation";
 
 const API_URL = (
   import.meta.env.VITE_API_URL || "http://127.0.0.1:4000/api"
@@ -17,10 +16,6 @@ const primaryButton =
 
 const secondaryButton =
   "inline-flex items-center justify-center rounded-xl border border-blue-200 bg-white px-4 py-2.5 text-sm font-semibold text-blue-700 transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50";
-
-// ============================================================
-// TIPOS
-// ============================================================
 
 type Attack = "SQLI" | "XSS";
 
@@ -121,9 +116,7 @@ type StoredReport = {
   report: AssessmentReport;
 };
 
-// ============================================================
 // CONFIGURAÇÕES E FUNÇÕES AUXILIARES
-// ============================================================
 
 const outcomeStyles: Record<
   Outcome,
@@ -189,9 +182,7 @@ async function api<T>(
   return data as T;
 }
 
-// ============================================================
 // COMPONENTES VISUAIS
-// ============================================================
 
 function OutcomeBadge({
   outcome,
@@ -257,9 +248,7 @@ function SummaryCard({
   );
 }
 
-// ============================================================
 // RESULTADOS DA AVALIAÇÃO DE SEGURANÇA
-// ============================================================
 
 function AssessmentDetails({
   report,
@@ -374,17 +363,27 @@ function AssessmentDetails({
                       / {result.testResponse.status}
                     </td>
 
+
+
+                    {/* ML: REQUISIÇÃO */}
                     <td className="px-4 py-4 text-slate-700">
-                      {result.ml?.request
-                        .classification ??
-                        "Indisponível"}
+                      {result.ml?.request?.classification ?? "Indisponível"}
                     </td>
 
+                    {/* ML: PAYLOAD */}
                     <td className="px-4 py-4 text-slate-700">
-                      {result.ml?.attack
-                        .classification ??
-                        "Indisponível"}
+                      <p>
+                        {result.ml?.attack?.classification ?? "Indisponível"}
+                      </p>
+
+                      <span
+                        className={`mt-2 inline-block rounded-md px-2 py-1 text-xs font-semibold ${interpretarML(result.ml).className
+                          }`}
+                      >
+                        {interpretarML(result.ml).label}
+                      </span>
                     </td>
+
 
                     <td className="px-4 py-4">
                       <OutcomeBadge
@@ -431,12 +430,16 @@ function AssessmentDetails({
                               : "Não"}
                           </p>
 
-                          <p>
-                            <b>JavaScript executado:</b>{" "}
-                            {result.browser?.executed
-                              ? "Confirmado"
-                              : "Não comprovado"}
-                          </p>
+
+                          {report.attackType === "XSS" && (
+                            <p>
+                              <b>JavaScript executado:</b>{" "}
+                              {result.browser?.checked && result.browser?.executed
+                                ? "Confirmado"
+                                : "Não comprovado"}
+                            </p>
+                          )}
+
 
                           <p>
                             {result.explanation}
@@ -492,13 +495,17 @@ function AssessmentDetails({
   );
 }
 
-// ============================================================
 // PÁGINA PRINCIPAL
-// ============================================================
 
 export default function SecurityEvaluationPanel() {
   const [scenarios, setScenarios] =
     useState<Scenario[]>([]);
+
+  const [loadingScenarios, setLoadingScenarios] =
+    useState(true);
+
+  const [scenarioLoadError, setScenarioLoadError] =
+    useState("");
 
   const [scenarioId, setScenarioId] =
     useState("");
@@ -536,10 +543,43 @@ export default function SecurityEvaluationPanel() {
   const [error, setError] =
     useState("");
 
-
-  // ----------------------------------------------------------
   // CARREGAMENTO DO CENÁRIO
-  // ----------------------------------------------------------
+
+  // Carregar cenários cadastrados no Supabase
+  useEffect(() => {
+    let active = true;
+
+    async function loadScenarios() {
+      try {
+        setLoadingScenarios(true);
+        setScenarioLoadError("");
+
+        const data = await api<Scenario[]>(
+          "/security/scenarios"
+        );
+
+        if (active) {
+          setScenarios(data);
+        }
+      } catch (err) {
+        if (active) {
+          setScenarioLoadError(
+            `Erro ao carregar cenários: ${errorMessage(err)}`
+          );
+        }
+      } finally {
+        if (active) {
+          setLoadingScenarios(false);
+        }
+      }
+    }
+
+    void loadScenarios();
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     setRoutes([]);
@@ -594,9 +634,7 @@ export default function SecurityEvaluationPanel() {
     };
   }, [scenarioId]);
 
-  // ----------------------------------------------------------
   // DADOS DERIVADOS
-  // ----------------------------------------------------------
 
   const selectedScenario = scenarios.find(
     (item) => item.id === scenarioId
@@ -622,9 +660,7 @@ export default function SecurityEvaluationPanel() {
     )
   );
 
-  // ----------------------------------------------------------
   // DESCOBERTA DAS ROTAS
-  // ----------------------------------------------------------
 
   async function discover() {
     if (!scenarioId) return;
@@ -648,10 +684,7 @@ export default function SecurityEvaluationPanel() {
     }
   }
 
-  // ----------------------------------------------------------
   // SELEÇÃO DA ROTA
-  // ----------------------------------------------------------
-
   async function addRoute(
     route: DiscoverableRoute
   ) {
@@ -692,9 +725,7 @@ export default function SecurityEvaluationPanel() {
     }
   }
 
-  // ----------------------------------------------------------
   // EXECUÇÃO DA AVALIAÇÃO INDIVIDUAL
-  // ----------------------------------------------------------
 
   async function execute() {
     if (!canEvaluate) return;
@@ -739,9 +770,7 @@ export default function SecurityEvaluationPanel() {
     }
   }
 
-  // ==========================================================
   // INTERFACE
-  // ==========================================================
 
   return (
     <main className="mx-auto max-w-7xl space-y-7 bg-slate-50 p-4 md:p-6">
@@ -890,6 +919,18 @@ export default function SecurityEvaluationPanel() {
           </label>
         </div>
 
+        {loadingScenarios && (
+          <p className="text-sm text-slate-500">
+            Carregando cenários cadastrados...
+          </p>
+        )}
+
+        {scenarioLoadError && (
+          <p className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+            {scenarioLoadError}
+          </p>
+        )}
+
         {/* URL DA APLICAÇÃO */}
 
         {selectedScenario ? (
@@ -900,6 +941,8 @@ export default function SecurityEvaluationPanel() {
             {selectedScenario.base_url}
           </div>
         ) : (
+          !loadingScenarios &&
+          !scenarioLoadError &&
           scenarios.length === 0 && (
             <p className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
               Nenhum cenário cadastrado. Crie um em{" "}
@@ -1027,29 +1070,29 @@ export default function SecurityEvaluationPanel() {
       {/* RESULTADO DA AVALIAÇÃO INDIVIDUAL */}
 
 
-     
-{report && (
-  <div className="space-y-4">
-    <AssessmentDetails report={report} />
 
-    <div className="flex justify-end">
-      <button
-        type="button"
-        onClick={() => {
-          const scenarioName =
-            scenarios.find(
-              (scenario) => scenario.id === scenarioId
-            )?.name || "Cenario";
+      {report && (
+        <div className="space-y-4">
+          <AssessmentDetails report={report} />
 
-          baixarPdfAvaliacaoDetalhado(report, scenarioName);
-        }}
-        className="rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700"
-      >
-        Baixar relatório em PDF
-      </button>
-    </div>
-  </div>
-)}
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={() => {
+                const scenarioName =
+                  scenarios.find(
+                    (scenario) => scenario.id === scenarioId
+                  )?.name || "Cenario";
+
+                baixarPdfAvaliacaoDetalhado(report, scenarioName);
+              }}
+              className="rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700"
+            >
+              Baixar relatório em PDF
+            </button>
+          </div>
+        </div>
+      )}
 
 
 

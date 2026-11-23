@@ -97,22 +97,64 @@ def analyze(data: dict[str, Any]) -> dict[str, Any]:
                 outcome, explanation = 'suspected', 'Status HTTP diferente entre condições SQL; investigar antes de confirmar falha.'
             else:
                 outcome, explanation = 'not_confirmed', 'Não houve evidência conclusiva de SQL Injection nos testes executados.'
+    
+    
     else:
-        browser = data.get('browser') or {}
-        reflected = bool(test.get('payload_reflected'))
-        executed = browser.get('executed') is True
-        signals = {'payload_reflected':reflected, 'browser_executed':executed,
-                   'browser_checked': browser.get('checked') is True}
+        # Verificação de Cross-Site Scripting (XSS)
+        browser = data.get("browser") or {}
+
+        reflected = bool(test.get("payload_reflected"))
+        checked = browser.get("checked") is True
+        reported_executed = browser.get("executed") is True
+        executed = checked and reported_executed
+
+        signals = {
+            "payload_reflected": reflected,
+            "browser_checked": checked,
+            "browser_executed": executed,
+        }
+
         if executed:
-            outcome = 'confirmed'
-            explanation = f'XSS demonstrado no campo {field}: o marcador inofensivo foi executado no navegador isolado ao abrir a resposta real da aplicação.'
+            outcome = "confirmed"
+            explanation = (
+                f"XSS demonstrado no campo {field}: "
+                "o navegador executou o marcador JavaScript "
+                "durante a avaliação controlada."
+            )
+
+        elif reported_executed and not checked:
+            outcome = "inconclusive"
+            explanation = (
+                "A execução foi informada, mas não houve "
+                "validação efetiva do navegador."
+            )
+
         elif reflected:
-            outcome = 'suspected'
-            explanation = f'O valor inserido no campo {field} apareceu na resposta, mas execução de script não foi comprovada; refletir texto em JSON ou HTML escapado não confirma XSS.'
-        elif browser.get('error'):
-            outcome = 'inconclusive'
-            explanation = f'Falha ao validar XSS no navegador: {str(browser["error"])[:180]}'
+            outcome = "suspected"
+            explanation = (
+                f"O conteúdo enviado no campo {field} "
+                "foi refletido na resposta HTTP, mas "
+                "a execução de JavaScript não foi comprovada."
+            )
+
+        elif browser.get("error"):
+            outcome = "inconclusive"
+            explanation = (
+                "Falha durante a validação de XSS: "
+                + str(browser["error"])[:180]
+            )
+
         else:
-            outcome = 'not_confirmed'
-            explanation = 'A requisição não demonstrou reflexão ou execução do marcador de XSS; isso não comprova ausência de outras vulnerabilidades.'
-    return {'outcome': outcome, 'explanation': explanation, 'signals': signals, 'recommendations': SOLUTIONS[attack]}
+            outcome = "not_confirmed"
+            explanation = (
+                "Não foram encontradas evidências suficientes "
+                "de XSS neste teste. Isso não comprova "
+                "a ausência de vulnerabilidades."
+            )
+
+    return {
+        "outcome": outcome,
+        "explanation": explanation,
+        "signals": signals,
+        "recommendations": SOLUTIONS[attack],
+    }

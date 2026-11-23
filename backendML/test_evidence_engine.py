@@ -24,5 +24,31 @@ class TestEvidence(unittest.TestCase):
     def test_rate_limit(self):
         r=analyze({'attackType':'SQLI','contract':AUTH,'baseline':DENIED,'falseCondition':DENIED,'testResponse':{'status':429}})
         self.assertEqual(r['outcome'],'inconclusive')
+    
+    def test_xss_without_browser_confirmation(self):
+        data = {
+            "attackType": "XSS",
+            "request": {
+                "field": "search"
+            },
+            "baseline": {
+                "status": 200
+            },
+            "testResponse": {
+                "status": 200,
+                "payload_reflected": True
+            },
+            "browser": {
+                "checked": False,
+                "executed": True
+            }
+        }
+
+        result = analyze(data)
+
+        self.assertEqual(
+            result["outcome"],
+            "inconclusive"
+        )
 
 if __name__=='__main__': unittest.main()

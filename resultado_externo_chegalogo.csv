@@ -1,61 +1,61 @@
 ﻿id,classe_esperada,payload,request_predicao,attack_predicao,http_chegalogo,request_correto,attack_correto
-NORM-01,norm,cliente_teste_001,Valid,norm,401,True,True
-NORM-02,norm,cliente_teste_002,Valid,norm,401,True,True
-NORM-03,norm,cliente_teste_003,Valid,norm,401,True,True
-NORM-04,norm,cliente_teste_004,Valid,norm,401,True,True
-NORM-05,norm,cliente_teste_005,Valid,norm,401,True,True
-NORM-06,norm,cliente_teste_006,Valid,norm,401,True,True
-NORM-07,norm,cliente_teste_007,Valid,norm,401,True,True
-NORM-08,norm,cliente_teste_008,Valid,norm,401,True,True
-NORM-09,norm,cliente_teste_009,Valid,norm,401,True,True
-NORM-10,norm,cliente_teste_010,Valid,norm,401,True,True
-NORM-11,norm,visitante_local_001,Valid,norm,401,True,True
-NORM-12,norm,visitante_local_002,Valid,norm,401,True,True
-NORM-13,norm,visitante_local_003,Valid,norm,401,True,True
-NORM-14,norm,visitante_local_004,Valid,norm,401,True,True
-NORM-15,norm,visitante_local_005,Valid,norm,401,True,True
-NORM-16,norm,visitante_local_006,Valid,norm,401,True,True
-NORM-17,norm,visitante_local_007,Valid,norm,401,True,True
-NORM-18,norm,visitante_local_008,Valid,norm,401,True,True
-NORM-19,norm,visitante_local_009,Valid,norm,401,True,True
-NORM-20,norm,visitante_local_010,Valid,norm,401,True,True
-SQLI-01,sqli,' OR '1'='1' -- ,Anomalous,sqli,200,True,True
-SQLI-02,sqli,' OR 1=1 -- ,Anomalous,sqli,200,True,True
-SQLI-03,sqli,admin' OR 'a'='a' -- ,Anomalous,sqli,200,True,True
-SQLI-04,sqli,' OR (3*3)=9 -- ,Anomalous,sqli,200,True,True
-SQLI-05,sqli,' OR LENGTH('abcd')=4 -- ,Anomalous,sqli,200,True,True
-SQLI-06,sqli,' OR 'texto' LIKE 'tex%' -- ,Anomalous,sqli,200,True,True
-SQLI-07,sqli,' OR '4'='4' /* ,Anomalous,sqli,200,True,True
-SQLI-08,sqli,' OR 7>=7 -- ,Anomalous,sqli,200,True,True
-SQLI-09,sqli,' OR 9<>8 -- ,Anomalous,sqli,200,True,True
-SQLI-10,sqli,' OR 'Z'='Z' -- ,Anomalous,sqli,200,True,True
-SQLI-11,sqli,x' OR '5'='5' -- ,Anomalous,sqli,200,True,True
-SQLI-12,sqli,' oR 15=15 -- ,Anomalous,sqli,200,True,True
-SQLI-13,sqli,' OR (8-3)=5 -- ,Anomalous,sqli,200,True,True
-SQLI-14,sqli,' OR UPPER('ab')='AB' -- ,Anomalous,sqli,200,True,True
-SQLI-15,sqli,' OR LENGTH('xyz')>2 -- ,Anomalous,sqli,200,True,True
-SQLI-16,sqli,' OR 'gh' LIKE 'g%' -- ,Anomalous,sqli,200,True,True
-SQLI-17,sqli,' OR 101=101 -- ,Anomalous,sqli,200,True,True
-SQLI-18,sqli,' OR (12/3)=4 -- ,Anomalous,sqli,200,True,True
-SQLI-19,sqli,' OR 'zero'!='um' -- ,Anomalous,sqli,200,True,True
-SQLI-20,sqli,' OR (2+5)=7 -- ,Anomalous,sqli,200,True,True
-XSS-01,xss,<script>alert('webdetector-01')</script>,Anomalous,xss,400,True,True
-XSS-02,xss,<img src=x onerror=alert('wd-02')>,Anomalous,xss,400,True,True
-XSS-03,xss,<svg onload=alert('wd-03')>,Anomalous,xss,400,True,True
-XSS-04,xss,<button onclick=alert('wd-04')>Ver</button>,Anomalous,xss,400,True,True
-XSS-05,xss,<div onmouseover=alert('wd-05')>Teste</div>,Anomalous,xss,400,True,True
-XSS-06,xss,<input onfocus=alert('wd-06') autofocus>,Anomalous,xss,400,True,True
-XSS-07,xss,<details open ontoggle=alert('wd-07')>OK</details>,Anomalous,norm,400,True,False
-XSS-08,xss,<a href=javascript:alert('wd-08')>Abrir</a>,Anomalous,xss,400,True,True
-XSS-09,xss,"<iframe srcdoc=""<script>alert('wd-09')</script>""></iframe>",Anomalous,xss,400,True,True
-XSS-10,xss,<svg><script>alert('wd-10')</script></svg>,Anomalous,xss,400,True,True
-XSS-11,xss,<img src=invalid onerror=console.log('wd-11')>,Anomalous,xss,400,True,True
-XSS-12,xss,<body onload=console.log('wd-12')>,Anomalous,xss,400,True,True
-XSS-13,xss,<marquee onstart=console.log('wd-13')>Teste</marquee>,Anomalous,norm,400,True,False
-XSS-14,xss,<video onerror=console.log('wd-14') src=invalid></video>,Anomalous,xss,400,True,True
-XSS-15,xss,<audio onerror=console.log('wd-15') src=invalid></audio>,Anomalous,norm,400,True,False
-XSS-16,xss,<object data=javascript:alert('wd-16')></object>,Anomalous,xss,400,True,True
-XSS-17,xss,<form><button formaction=javascript:alert('wd-17')>Ir</button></form>,Anomalous,xss,400,True,True
-XSS-18,xss,<svg><animate onbegin=alert('wd-18') attributeName=x></animate></svg>,Anomalous,xss,400,True,True
-XSS-19,xss,<input onblur=console.log('wd-19')>,Anomalous,norm,400,True,False
-XSS-20,xss,<div onpointerenter=alert('wd-20')>Aqui</div>,Anomalous,xss,400,True,True
+NORM-01,norm,cliente_teste_001,Valid,norm,não enviado,True,True
+NORM-02,norm,cliente_teste_002,Valid,norm,não enviado,True,True
+NORM-03,norm,cliente_teste_003,Valid,norm,não enviado,True,True
+NORM-04,norm,cliente_teste_004,Valid,norm,não enviado,True,True
+NORM-05,norm,cliente_teste_005,Valid,norm,não enviado,True,True
+NORM-06,norm,cliente_teste_006,Valid,norm,não enviado,True,True
+NORM-07,norm,cliente_teste_007,Valid,norm,não enviado,True,True
+NORM-08,norm,cliente_teste_008,Valid,norm,não enviado,True,True
+NORM-09,norm,cliente_teste_009,Valid,norm,não enviado,True,True
+NORM-10,norm,cliente_teste_010,Valid,norm,não enviado,True,True
+NORM-11,norm,visitante_local_001,Valid,norm,não enviado,True,True
+NORM-12,norm,visitante_local_002,Valid,norm,não enviado,True,True
+NORM-13,norm,visitante_local_003,Valid,norm,não enviado,True,True
+NORM-14,norm,visitante_local_004,Valid,norm,não enviado,True,True
+NORM-15,norm,visitante_local_005,Valid,norm,não enviado,True,True
+NORM-16,norm,visitante_local_006,Valid,norm,não enviado,True,True
+NORM-17,norm,visitante_local_007,Valid,norm,não enviado,True,True
+NORM-18,norm,visitante_local_008,Valid,norm,não enviado,True,True
+NORM-19,norm,visitante_local_009,Valid,norm,não enviado,True,True
+NORM-20,norm,visitante_local_010,Valid,norm,não enviado,True,True
+SQLI-01,sqli,' OR '1'='1' -- ,Anomalous,sqli,não enviado,True,True
+SQLI-02,sqli,' OR 1=1 -- ,Anomalous,sqli,não enviado,True,True
+SQLI-03,sqli,admin' OR 'a'='a' -- ,Anomalous,sqli,não enviado,True,True
+SQLI-04,sqli,' OR (3*3)=9 -- ,Anomalous,sqli,não enviado,True,True
+SQLI-05,sqli,' OR LENGTH('abcd')=4 -- ,Anomalous,sqli,não enviado,True,True
+SQLI-06,sqli,' OR 'texto' LIKE 'tex%' -- ,Anomalous,sqli,não enviado,True,True
+SQLI-07,sqli,' OR '4'='4' /* ,Anomalous,sqli,não enviado,True,True
+SQLI-08,sqli,' OR 7>=7 -- ,Anomalous,sqli,não enviado,True,True
+SQLI-09,sqli,' OR 9<>8 -- ,Anomalous,sqli,não enviado,True,True
+SQLI-10,sqli,' OR 'Z'='Z' -- ,Anomalous,sqli,não enviado,True,True
+SQLI-11,sqli,x' OR '5'='5' -- ,Anomalous,sqli,não enviado,True,True
+SQLI-12,sqli,' oR 15=15 -- ,Anomalous,sqli,não enviado,True,True
+SQLI-13,sqli,' OR (8-3)=5 -- ,Anomalous,sqli,não enviado,True,True
+SQLI-14,sqli,' OR UPPER('ab')='AB' -- ,Anomalous,sqli,não enviado,True,True
+SQLI-15,sqli,' OR LENGTH('xyz')>2 -- ,Anomalous,sqli,não enviado,True,True
+SQLI-16,sqli,' OR 'gh' LIKE 'g%' -- ,Anomalous,sqli,não enviado,True,True
+SQLI-17,sqli,' OR 101=101 -- ,Anomalous,sqli,não enviado,True,True
+SQLI-18,sqli,' OR (12/3)=4 -- ,Anomalous,sqli,não enviado,True,True
+SQLI-19,sqli,' OR 'zero'!='um' -- ,Anomalous,sqli,não enviado,True,True
+SQLI-20,sqli,' OR (2+5)=7 -- ,Anomalous,sqli,não enviado,True,True
+XSS-01,xss,<script>alert('webdetector-01')</script>,Anomalous,xss,não enviado,True,True
+XSS-02,xss,<img src=x onerror=alert('wd-02')>,Anomalous,xss,não enviado,True,True
+XSS-03,xss,<svg onload=alert('wd-03')>,Anomalous,xss,não enviado,True,True
+XSS-04,xss,<button onclick=alert('wd-04')>Ver</button>,Anomalous,xss,não enviado,True,True
+XSS-05,xss,<div onmouseover=alert('wd-05')>Teste</div>,Anomalous,xss,não enviado,True,True
+XSS-06,xss,<input onfocus=alert('wd-06') autofocus>,Anomalous,xss,não enviado,True,True
+XSS-07,xss,<details open ontoggle=alert('wd-07')>OK</details>,Anomalous,xss,não enviado,True,True
+XSS-08,xss,<a href=javascript:alert('wd-08')>Abrir</a>,Anomalous,xss,não enviado,True,True
+XSS-09,xss,"<iframe srcdoc=""<script>alert('wd-09')</script>""></iframe>",Anomalous,xss,não enviado,True,True
+XSS-10,xss,<svg><script>alert('wd-10')</script></svg>,Anomalous,xss,não enviado,True,True
+XSS-11,xss,<img src=invalid onerror=console.log('wd-11')>,Anomalous,xss,não enviado,True,True
+XSS-12,xss,<body onload=console.log('wd-12')>,Anomalous,norm,não enviado,True,False
+XSS-13,xss,<marquee onstart=console.log('wd-13')>Teste</marquee>,Anomalous,norm,não enviado,True,False
+XSS-14,xss,<video onerror=console.log('wd-14') src=invalid></video>,Anomalous,xss,não enviado,True,True
+XSS-15,xss,<audio onerror=console.log('wd-15') src=invalid></audio>,Anomalous,xss,não enviado,True,True
+XSS-16,xss,<object data=javascript:alert('wd-16')></object>,Anomalous,xss,não enviado,True,True
+XSS-17,xss,<form><button formaction=javascript:alert('wd-17')>Ir</button></form>,Anomalous,xss,não enviado,True,True
+XSS-18,xss,<svg><animate onbegin=alert('wd-18') attributeName=x></animate></svg>,Anomalous,xss,não enviado,True,True
+XSS-19,xss,<input onblur=console.log('wd-19')>,Anomalous,norm,não enviado,True,False
+XSS-20,xss,<div onpointerenter=alert('wd-20')>Aqui</div>,Anomalous,xss,não enviado,True,True

@@ -25,3 +25,6 @@ build/
 
 # Logs
 *.log
+
+# Modelos candidatos de novos treinamentos
+backendML/candidatos/

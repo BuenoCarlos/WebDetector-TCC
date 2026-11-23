@@ -8,7 +8,13 @@ from urllib.parse import urlencode
 from evidence_engine import analyze
 
 ROOT = Path(__file__).resolve().parent
-MODELS = ROOT / 'models'
+
+MODELS = Path(
+    os.getenv(
+        "ML_MODELS_DIR",
+        str(ROOT / "models")
+    )
+).resolve()
 _app_models = {}
 _metrics = None
 
@@ -62,17 +68,59 @@ def build_app():
         initialize()
         return jsonify(_metrics)
 
-    @app.post('/api/ml/predict')
+    
+    @app.post("/api/ml/predict")
     def predict():
         data = request.get_json(silent=True) or {}
+
         try:
-            method = str(data.get('method','GET'))
-            field = str(data.get('field','payload'))
-            payload = str(data.get('payload',''))[:5000]
-            return jsonify({'request_ml':classify_request(method,field,payload),
-                            'attack_ml':classify_attack(payload)})
+            method = str(data.get("method", "GET"))
+            field = str(data.get("field", "payload"))
+            payload = str(data.get("payload", ""))[:5000]
+
+            request_result = classify_request(
+                method,
+                field,
+                payload
+            )
+
+            attack_result = classify_attack(payload)
+
+            if (
+                request_result["classification"] == "Anomalous"
+                and attack_result["classification"] == "norm"
+            ):
+                interpretation = {
+                    "status": "suspeito",
+                    "description": (
+                        "Requisição considerada anômala, "
+                        "mas o tipo de ataque não foi identificado."
+                    )
+                }
+
+            elif attack_result["classification"] in ("sqli", "xss"):
+                interpretation = {
+                    "status": "ataque_identificado",
+                    "description": (
+                        "Payload com características de "
+                        "ataque identificadas pelo modelo."
+                    )
+                }
+
+            else:
+                interpretation = {
+                    "status": "normal",
+                    "description": "Nenhum ataque identificado."
+                }
+
+            return jsonify({
+                "request_ml": request_result,
+                "attack_ml": attack_result,
+                "interpretation": interpretation
+            })
+
         except Exception as e:
-            return jsonify({'error':str(e)}),503
+            return jsonify({"error": str(e)}), 503
 
     @app.post('/api/ml/analyze')
     def evaluate():
@@ -95,8 +143,3 @@ def build_app():
         return jsonify({**result,'ml':ml,'ml_error':ml_error})
 
     return app
-
-
-if __name__ == '__main__':
-    app = build_app()
-    app.run(host='127.0.0.1',port=int(os.getenv('ML_PORT','5000')),debug=False)

@@ -1,13 +1,11 @@
 """Treina dois classificadores: request (Valid/Anomalous), payload (norm/sqli/xss).
-
-Train/val/test group split no primeiro conjunto; train/val a partir de payload_train,
-held-out payload_test intocado para avaliação final. Métricas reais, não simuladas.
 """
 from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
 import warnings
+import re
 
 import joblib
 import numpy as np
@@ -24,10 +22,9 @@ from sklearn.pipeline import Pipeline
 from sklearn.svm import LinearSVC
 
 ROOT = Path(__file__).resolve().parent
-DATASETS = ROOT.parent / 'datasets'
-MODELS = ROOT / 'models'
+DATASETS = ROOT / "datasets"
+CANDIDATOS = ROOT / "candidatos"
 RANDOM_SEED = 42
-
 
 def algorithms():
     # TF-IDF adequado para texto curto e variações de caracteres de payloads.
@@ -39,7 +36,6 @@ def algorithms():
                                                 class_weight='balanced_subsample', n_jobs=-1, random_state=RANDOM_SEED),
     }
 
-
 def make_pipeline(estimator):
     return Pipeline([
         ('vectorizer', TfidfVectorizer(analyzer='char', ngram_range=(2, 4),
@@ -48,12 +44,59 @@ def make_pipeline(estimator):
     ])
 
 
-def group_split(frame, *, test_size):
-    groups = frame['text'].str.casefold().str.strip()
-    splitter = GroupShuffleSplit(n_splits=1, test_size=test_size, random_state=RANDOM_SEED)
-    train_idx, test_idx = next(splitter.split(frame['text'], frame['label'], groups))
-    return frame.iloc[train_idx].reset_index(drop=True), frame.iloc[test_idx].reset_index(drop=True)
+def group_key(text, grouping="exact"):
+    text = str(text).casefold().strip()
 
+    if grouping == "template":
+        text = re.sub(r"\b[0-9a-f]{24,}\b", "<hex>", text)
+        text = re.sub(r"\b\d+\b", "<numero>", text)
+
+    return text
+
+def group_split(frame, *, test_size, grouping="exact"):
+    groups = frame["text"].map(
+        lambda text: group_key(text, grouping)
+    )
+
+    splitter = GroupShuffleSplit(
+        n_splits=1,
+        test_size=test_size,
+        random_state=RANDOM_SEED
+    )
+
+    train_idx, test_idx = next(
+        splitter.split(
+            frame["text"],
+            frame["label"],
+            groups=groups
+        )
+    )
+
+    train = frame.iloc[train_idx].reset_index(drop=True)
+    test = frame.iloc[test_idx].reset_index(drop=True)
+
+    return train, test
+
+def check_no_overlap(train, test, grouping="exact"):
+    train_keys = set(
+        train["text"].map(
+            lambda text: group_key(text, grouping)
+        )
+    )
+
+    test_keys = set(
+        test["text"].map(
+            lambda text: group_key(text, grouping)
+        )
+    )
+
+    repeated = train_keys.intersection(test_keys)
+
+    if repeated:
+        raise ValueError(
+            f"Vazamento de dados: {len(repeated)} "
+            "entradas compartilhadas entre conjuntos."
+        )
 
 def load_request(path):
     frame = pd.read_csv(path, sep='«', engine='python', dtype=str).fillna('')
@@ -67,7 +110,6 @@ def load_request(path):
         raise ValueError('Há requisições idênticas com rótulos conflitantes.')
     return frame[['text', 'label']].reset_index(drop=True)
 
-
 def load_payload(path):
     frame = pd.read_csv(path, dtype=str, keep_default_na=False)
     if not {'payload', 'attack_type', 'label'}.issubset(frame.columns):
@@ -79,7 +121,6 @@ def load_payload(path):
     if frame.groupby('text')['label'].nunique().gt(1).any():
         raise ValueError('Há payloads idênticos com categorias conflitantes.')
     return frame[['text', 'label']].reset_index(drop=True)
-
 
 def scores(model, dataset, labels):
     preds = model.predict(dataset['text'])
@@ -94,66 +135,262 @@ def scores(model, dataset, labels):
     }
 
 
-def train_stage(name, train, test, labels):
-    fit, validation = group_split(train, test_size=.20)
-    if set(fit.label) != set(labels) or set(validation.label) != set(labels) or set(test.label) != set(labels):
-        raise ValueError(f'Faltam classes na divisão do estágio {name}.')
-    rows = []
-    params = algorithms()
-    print(f'\n[{name}] train={len(fit)}, validation={len(validation)}, test={len(test)}', flush=True)
-    for label, estimator in params.items():
+def train_stage(
+    name,
+    train,
+    test,
+    labels,
+    grouping,
+    output_dir
+):
+    fit, validation = group_split(
+        train,
+        test_size=0.20,
+        grouping=grouping
+    )
+
+    check_no_overlap(fit, validation, grouping)
+    check_no_overlap(train, test, "exact")
+
+    for description, dataset in [
+        ("treinamento", fit),
+        ("validação", validation),
+        ("teste", test)
+    ]:
+        missing = set(labels) - set(dataset["label"])
+
+        if missing:
+            raise ValueError(
+                f"{name}: classes ausentes em "
+                f"{description}: {missing}"
+            )
+
+    algorithms_list = algorithms()
+    validation_results = []
+
+    print(f"\nModelo: {name}")
+    print(f"Treinamento: {len(fit)}")
+    print(f"Validação: {len(validation)}")
+    print(f"Teste: {len(test)}")
+
+    for algorithm_name, estimator in algorithms_list.items():
         model = make_pipeline(estimator)
-        model.fit(fit['text'], fit['label'])
-        val = scores(model, validation, labels)
-        rows.append({'algorithm': label, 'validation': {k: val[k] for k in ('accuracy','precision','recall','f1')}})
-        print(f'  validação {label}: F1 macro={val["f1"]:.4f}', flush=True)
-    best = max(rows, key=lambda row: (row['validation']['f1'], row['validation']['recall']))['algorithm']
-    # Reajusta os quatro modelos com todo conjunto de treino antes de avaliar o held-out.
-    final_rows = []
-    for row in rows:
-        label = row['algorithm']
-        model = make_pipeline(params[label])
-        model.fit(train['text'], train['label'])
-        test_scores = scores(model, test, labels)
-        final_rows.append({'algorithm': label, 'validation': row['validation'], **test_scores})
-        print(f'  teste {label}: acurácia={test_scores["accuracy"]:.4f}, F1 macro={test_scores["f1"]:.4f}', flush=True)
-        if label == best:
-            joblib.dump(model, MODELS / f'{name}.joblib')
-    return {'best_algorithm': best, 'labels': labels, 'metric_selection': 'F1 macro da validação',
-            'sizes': {'train_total': len(train), 'validation_for_selection': len(validation), 'test': len(test)},
-            'results': final_rows}
+
+        model.fit(
+            fit["text"],
+            fit["label"]
+        )
+
+        result = scores(
+            model,
+            validation,
+            labels
+        )
+
+        validation_results.append({
+            "algorithm": algorithm_name,
+            "validation": {
+                key: result[key]
+                for key in (
+                    "accuracy",
+                    "precision",
+                    "recall",
+                    "f1"
+                )
+            }
+        })
+
+        print(
+            f"Validação - {algorithm_name}: "
+            f"F1 macro = {result['f1']:.4f}"
+        )
+
+    best = max(
+        validation_results,
+        key=lambda item: (
+            item["validation"]["f1"],
+            item["validation"]["recall"]
+        )
+    )["algorithm"]
+
+    final_results = []
+
+    for item in validation_results:
+        algorithm_name = item["algorithm"]
+
+        model = make_pipeline(
+            algorithms_list[algorithm_name]
+        )
+
+        model.fit(
+            train["text"],
+            train["label"]
+        )
+
+        result = scores(model, test, labels)
+
+        final_results.append({
+            "algorithm": algorithm_name,
+            "validation": item["validation"],
+            **result
+        })
+
+        print(
+            f"Teste - {algorithm_name}: "
+            f"F1 macro = {result['f1']:.4f}"
+        )
+
+        if algorithm_name == best:
+            joblib.dump(
+                model,
+                output_dir / f"{name}.joblib"
+            )
+
+    return {
+        "best_algorithm": best,
+        "labels": labels,
+        "metric_selection": "F1 macro da validação",
+        "sizes": {
+            "train_total": len(train),
+            "train_for_selection": len(fit),
+            "validation_for_selection": len(validation),
+            "test": len(test)
+        },
+        "results": final_results
+    }
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--request', default=str(DATASETS / 'dataset_request_classifier.csv'))
-    parser.add_argument('--payload-train', default=str(DATASETS / 'payload_train.csv'))
-    parser.add_argument('--payload-test', default=str(DATASETS / 'payload_test.csv'))
-    parser.add_argument('--smoke', action='store_true', help='Teste técnico rápido em amostras; NÃO usar métricas no artigo.')
+
+    parser.add_argument(
+        "--request",
+        default=str(
+            DATASETS / "dataset_request_classifier.csv"
+        )
+    )
+
+    parser.add_argument(
+        "--payload-train",
+        default=str(DATASETS / "payload_train.csv")
+    )
+
+    parser.add_argument(
+        "--payload-test",
+        default=str(DATASETS / "payload_test.csv")
+    )
+
+    parser.add_argument(
+        "--grouping",
+        choices=["exact", "template"],
+        default="exact"
+    )
+
+    parser.add_argument(
+        "--smoke",
+        action="store_true"
+    )
+
     args = parser.parse_args()
-    MODELS.mkdir(parents=True, exist_ok=True)
+
+    folder_name = args.grouping
+
+    if args.smoke:
+        folder_name += "_smoke"
+
+    output_dir = CANDIDATOS / folder_name
+    output_dir.mkdir(parents=True, exist_ok=True)
+
     requests = load_request(args.request)
-    req_train, req_test = group_split(requests, test_size=.20)
+
     attack_train = load_payload(args.payload_train)
     attack_test = load_payload(args.payload_test)
-    intersection = set(attack_train.text.str.casefold()) & set(attack_test.text.str.casefold())
-    if intersection:
-        warnings.warn(f'{len(intersection)} payloads aparecem em treino e teste; serão removidos do teste.')
-        attack_test = attack_test[~attack_test.text.str.casefold().isin(intersection)].copy()
+
+    req_train, req_test = group_split(
+        requests,
+        test_size=0.20,
+        grouping=args.grouping
+    )
+
+    check_no_overlap(
+        req_train,
+        req_test,
+        args.grouping
+    )
+
+    check_no_overlap(
+        attack_train,
+        attack_test,
+        "exact"
+    )
+
     if args.smoke:
         def take(frame, n):
-            return frame.groupby('label', group_keys=False).sample(
-                n=min(n, int(frame.label.value_counts().min())), random_state=RANDOM_SEED
-            ).reset_index(drop=True)
-        req_train, req_test = take(req_train, 100), take(req_test, 35)
-        attack_train, attack_test = take(attack_train, 80), take(attack_test, 30)
-    summary = {
-        'smoke': bool(args.smoke), 'note': 'Dados de requisições: Valid/Anomalous. Payloads: norm/sqli/xss; outras categorias excluídas.',
-        'request': train_stage('request', req_train, req_test, ['Valid','Anomalous']),
-        'attack': train_stage('attack', attack_train, attack_test, ['norm','sqli','xss']),
-    }
-    (MODELS / 'metrics.json').write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding='utf-8')
-    print('\nTreinamento concluído. Salvo em backendML/models. Smoke=',args.smoke, flush=True)
+            quantity = min(
+                n,
+                int(frame["label"].value_counts().min())
+            )
 
-if __name__ == '__main__':
+            return frame.groupby(
+                "label",
+                group_keys=False
+            ).sample(
+                n=quantity,
+                random_state=RANDOM_SEED
+            ).reset_index(drop=True)
+
+        req_train = take(req_train, 100)
+        req_test = take(req_test, 35)
+
+        attack_train = take(attack_train, 80)
+        attack_test = take(attack_test, 30)
+
+    summary = {
+        "smoke": args.smoke,
+        "grouping": args.grouping,
+        "random_seed": RANDOM_SEED,
+        "note": (
+            "Requisições: Valid/Anomalous. "
+            "Payloads: norm/sqli/xss."
+        ),
+        "request": train_stage(
+            "request",
+            req_train,
+            req_test,
+            ["Valid", "Anomalous"],
+            args.grouping,
+            output_dir
+        ),
+        "attack": train_stage(
+            "attack",
+            attack_train,
+            attack_test,
+            ["norm", "sqli", "xss"],
+            args.grouping,
+            output_dir
+        )
+    }
+
+    metrics_path = output_dir / "metrics.json"
+
+    metrics_path.write_text(
+        json.dumps(
+            summary,
+            ensure_ascii=False,
+            indent=2
+        ),
+        encoding="utf-8"
+    )
+
+    print("\nTreinamento finalizado.")
+    print(f"Resultados: {output_dir}")
+
+    if args.smoke:
+        print(
+            "ATENÇÃO: teste rápido. "
+            "Não utilizar essas métricas no TCC."
+        )
+
+
+if __name__ == "__main__":
     main()

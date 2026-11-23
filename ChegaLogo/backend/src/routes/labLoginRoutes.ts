@@ -103,15 +103,27 @@ labDb.exec(`
  *       404:
  *         description: Endpoint indisponível em produção
  */
+
 router.post("/login", (req, res) => {
-  if (process.env.NODE_ENV === "production") {
+  const remote = req.socket.remoteAddress || "";
+
+  const local = [
+    "127.0.0.1",
+    "::1",
+    "::ffff:127.0.0.1",
+  ].includes(remote);
+
+  if (
+    process.env.NODE_ENV !== "development" ||
+    !local
+  ) {
     return res.status(404).json({
       success: false,
-      message: "Rota indisponível",
+      message: "Laboratório indisponível",
     });
   }
 
-  const { username, password } = req.body;
+  const { username, password } = req.body ?? {};
 
   if (
     typeof username !== "string" ||
@@ -123,31 +135,53 @@ router.post("/login", (req, res) => {
     });
   }
 
-  // INTENCIONALMENTE VULNERÁVEL.
-    const query = `
-    SELECT id, username
-    FROM lab_users
-    WHERE username = '${username}' AND password = '${password}'
-    `;
+  const vulnerableMode =
+    process.env.WD_LAB_PROTECTED === "0";
 
   try {
-    const users = labDb.prepare(query).all() as
-       { id: number; username: string; }[];
+    let users: {
+      id: number;
+      username: string;
+    }[];
+
+    if (vulnerableMode) {
+      // Apenas no laboratório intencionalmente vulnerável.
+      const query = `
+        SELECT id, username
+        FROM lab_users
+        WHERE username = '${username}'
+        AND password = '${password}'
+      `;
+
+      users = labDb.prepare(query).all() as typeof users;
+    } else {
+      // Modo protegido: consulta parametrizada.
+      const query = `
+        SELECT id, username
+        FROM lab_users
+        WHERE username = ?
+        AND password = ?
+      `;
+
+      users = labDb
+        .prepare(query)
+        .all(username, password) as typeof users;
+    }
 
     if (users.length === 0) {
-  return res.status(401).json({
-    success: false,
-    message: "Credenciais inválidas",
-  });
-}
+      return res.status(401).json({
+        success: false,
+        message: "Credenciais inválidas",
+      });
+    }
 
-return res.status(200).json({
-  success: true,
-  lab_authenticated: true,
-  message: "Autenticação de laboratório realizada",
-  total: users.length,
-  users,
-});
+    return res.status(200).json({
+      success: true,
+      lab_authenticated: true,
+      message: "Autenticação de laboratório realizada",
+      total: users.length,
+      users,
+    });
   } catch {
     return res.status(400).json({
       success: false,
@@ -155,5 +189,6 @@ return res.status(200).json({
     });
   }
 });
+
 
 export default router;

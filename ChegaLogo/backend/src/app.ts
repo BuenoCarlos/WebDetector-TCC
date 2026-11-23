@@ -11,6 +11,7 @@ import clientRoutes from "./routes/clientRoutes";
 import supportRoutes from "./routes/supportRoutes";
 import { openapiSpec } from "./config/openapi";
 import labLoginRoutes from "./routes/labLoginRoutes";
+import labXssRoutes from "./routes/labXssRoutes";
 
 import cookieParser from "cookie-parser";
 
@@ -35,6 +36,14 @@ app.use("/api/tracking", trackingRoutes);
 if (env.NODE_ENV !== "production") {
   app.use("/api/lab", labLoginRoutes);
 }
+
+if (
+  env.NODE_ENV === "development" &&
+  process.env.WD_ENABLE_XSS_LAB === "1"
+) {
+  app.use("/api/lab", labXssRoutes);
+}
+
 app.use("/api/clients", clientRoutes);
 app.use("/api/support", supportRoutes);
 

@@ -28,6 +28,7 @@ type Contract = {
   baseline: Record<string, string>;
   auth?: AuthContract;
   browser_xss: boolean;
+  browser_view_path?: string;
 };
 
 type OperationInfo = {
@@ -116,10 +117,10 @@ function validPath(path: string): boolean {
 function boolList(value: unknown): string[] {
   return Array.isArray(value)
     ? value.filter(
-        (x): x is string =>
-          typeof x === "string" &&
-          /^[a-zA-Z0-9_.-]{1,90}$/.test(x)
-      ).slice(0, 10)
+      (x): x is string =>
+        typeof x === "string" &&
+        /^[a-zA-Z0-9_.-]{1,90}$/.test(x)
+    ).slice(0, 10)
     : [];
 }
 
@@ -271,7 +272,7 @@ function concretePath(
 
       const schema =
         parameter &&
-        isObject(parameter.schema)
+          isObject(parameter.schema)
           ? parameter.schema
           : {};
 
@@ -392,8 +393,8 @@ function infoFromOp(
       ),
       confirmation_mode:
         rawAuth.confirmation_mode as
-          | "response"
-          | "session",
+        | "response"
+        | "session",
     };
   }
 
@@ -404,6 +405,7 @@ function infoFromOp(
       op.summary || path
     ),
     fields,
+
     contract: {
       kind: extension.kind as
         | "authentication"
@@ -412,7 +414,13 @@ function infoFromOp(
       auth,
       browser_xss:
         extension.browser_xss === true,
+      browser_view_path:
+        typeof extension.browser_view_path === "string" &&
+          validPath(extension.browser_view_path)
+          ? extension.browser_view_path
+          : undefined,
     },
+
   };
 }
 
@@ -677,10 +685,7 @@ async function verifyXssInBrowser(
   executed: boolean;
   error?: string;
 }> {
-  if (
-    !info.contract.browser_xss ||
-    info.method !== "GET"
-  ) {
+  if (!info.contract.browser_xss) {
     return {
       checked: false,
       executed: false,
@@ -711,19 +716,20 @@ async function verifyXssInBrowser(
       ignoreHTTPSErrors: false,
       ...(auth?.bearer
         ? {
-            extraHTTPHeaders: {
-              Authorization:
-                `Bearer ${auth.bearer}`,
-            },
-          }
+          extraHTTPHeaders: {
+            Authorization:
+              `Bearer ${auth.bearer}`,
+          },
+        }
         : {}),
     });
 
-    const url = getTarget(
-      baseUrl,
-      info,
-      body
-    );
+    const url = info.contract.browser_view_path
+      ? new URL(
+        info.contract.browser_view_path,
+        localBase(baseUrl)
+      )
+      : getTarget(baseUrl, info, body);
 
     if (auth?.cookie) {
       const cookies = auth.cookie
@@ -735,10 +741,10 @@ async function verifyXssInBrowser(
 
           return i > 0
             ? {
-                name: part.slice(0, i),
-                value: part.slice(i + 1),
-                url: url.origin,
-              }
+              name: part.slice(0, i),
+              value: part.slice(i + 1),
+              url: url.origin,
+            }
             : null;
         })
         .filter(
@@ -759,32 +765,52 @@ async function verifyXssInBrowser(
     const page = await context.newPage();
     const origin = url.origin;
 
-    await page.route(
-      "**/*",
-      async (route: any) => {
-        const requested =
-          route.request().url();
 
-        if (
-          requested.startsWith("data:") ||
-          requested.startsWith("about:")
-        ) {
-          return route.continue();
+    let postNavigationSent = false;
+
+    await page.route("**/*", async (route: any) => {
+      const browserRequest = route.request();
+      const requested = browserRequest.url();
+
+      if (
+        requested.startsWith("data:") ||
+        requested.startsWith("about:")
+      ) {
+        return route.continue();
+      }
+
+      try {
+        if (new URL(requested).origin !== origin) {
+          return route.abort();
         }
-
-        try {
-          if (
-            new URL(requested).origin === origin
-          ) {
-            return route.continue();
-          }
-        } catch {
-          // URL inválida.
-        }
-
+      } catch {
         return route.abort();
       }
-    );
+
+      // Para XSS refletido via POST, o navegador
+      // precisa receber a resposta HTML do POST.
+      if (
+        info.method === "POST" &&
+        !info.contract.browser_view_path &&
+        !postNavigationSent &&
+        browserRequest.isNavigationRequest() &&
+        requested === url.toString()
+      ) {
+        postNavigationSent = true;
+
+        return route.continue({
+          method: "POST",
+          postData: JSON.stringify(body),
+          headers: {
+            ...browserRequest.headers(),
+            "content-type": "application/json",
+          },
+        });
+      }
+
+      return route.continue();
+    });
+
 
     await page.goto(url.toString(), {
       waitUntil: "domcontentloaded",
@@ -1303,27 +1329,27 @@ export class SecurityEvaluationService {
         const probes =
           attackType === "SQLI"
             ? SQLI_PROBES.map((p) => ({
-                name: p.name,
-                payload: p.trueValue,
-                falseValue: p.falseValue,
-                token: "",
-              }))
+              name: p.name,
+              payload: p.trueValue,
+              falseValue: p.falseValue,
+              token: "",
+            }))
             : xssPayloads(
-                randomUUID().replace(
-                  /-/g,
-                  ""
-                )
-              ).map((p) => ({
-                name: p.name,
-                payload: p.value,
-                falseValue: null,
-                token:
-                  (
-                    p.value.match(
-                      /__webdetector_xss='([^']+)'/
-                    ) || []
-                  )[1] || "",
-              }));
+              randomUUID().replace(
+                /-/g,
+                ""
+              )
+            ).map((p) => ({
+              name: p.name,
+              payload: p.value,
+              falseValue: null,
+              token:
+                (
+                  p.value.match(
+                    /__webdetector_xss='([^']+)'/
+                  ) || []
+                )[1] || "",
+            }));
 
         for (const probe of probes) {
           const needed =
@@ -1334,8 +1360,8 @@ export class SecurityEvaluationService {
           if (
             sent + needed > maxRequests ||
             Date.now() +
-              interval * needed +
-              200 >= deadline
+            interval * needed +
+            200 >= deadline
           ) {
             break;
           }
@@ -1343,12 +1369,12 @@ export class SecurityEvaluationService {
           const falseCondition =
             attackType === "SQLI"
               ? await sendLimited(
-                  {
-                    ...baseline,
-                    [field]: probe.falseValue!,
-                  },
-                  probe.falseValue!
-                )
+                {
+                  ...baseline,
+                  [field]: probe.falseValue!,
+                },
+                probe.falseValue!
+              )
               : null;
 
           if (
@@ -1382,16 +1408,16 @@ export class SecurityEvaluationService {
           const browser =
             attackType === "XSS"
               ? await verifyXssInBrowser(
-                  scenario.base_url,
-                  op,
-                  requestBody,
-                  probe.token,
-                  auth
-                )
+                scenario.base_url,
+                op,
+                requestBody,
+                probe.token,
+                auth
+              )
               : {
-                  checked: false,
-                  executed: false,
-                };
+                checked: false,
+                executed: false,
+              };
 
           const analyzed =
             await pythonAnalysis({
@@ -1439,17 +1465,17 @@ export class SecurityEvaluationService {
         )
           ? "confirmed"
           : results.some(
-              (r) =>
-                r.outcome === "suspected"
-            )
-          ? "suspected"
-          : results.some(
+            (r) =>
+              r.outcome === "suspected"
+          )
+            ? "suspected"
+            : results.some(
               (r) =>
                 r.outcome === "inconclusive"
             ) ||
-            results.length === 0
-          ? "inconclusive"
-          : "not_confirmed";
+              results.length === 0
+              ? "inconclusive"
+              : "not_confirmed";
 
       const recommendations =
         results[0]?.recommendations || [];
@@ -1473,10 +1499,10 @@ export class SecurityEvaluationService {
           outcome === "confirmed"
             ? "Ao menos um teste demonstrou a vulnerabilidade segundo evidências verificáveis."
             : outcome === "suspected"
-            ? "Há indícios, mas ainda não há prova suficiente de exploração."
-            : outcome === "not_confirmed"
-            ? "Nenhum teste executado demonstrou vulnerabilidade; isso não comprova ausência de outras falhas."
-            : "Respostas ou limites não permitiram concluir a avaliação.",
+              ? "Há indícios, mas ainda não há prova suficiente de exploração."
+              : outcome === "not_confirmed"
+                ? "Nenhum teste executado demonstrou vulnerabilidade; isso não comprova ausência de outras falhas."
+                : "Respostas ou limites não permitiram concluir a avaliação.",
         results,
         recommendations,
       };

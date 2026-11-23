@@ -442,6 +442,83 @@ if (process.env.NODE_ENV !== "production") {
   };
 }
 
+
+if (
+  process.env.NODE_ENV === "development" &&
+  process.env.WD_ENABLE_XSS_LAB === "1"
+) {
+  const xssBody = jsonBody({
+    type: "object",
+    required: ["message"],
+    properties: {
+      message: { type: "string" },
+    },
+  });
+
+  const xssQuery = [
+    {
+      name: "message",
+      in: "query",
+      required: true,
+      schema: { type: "string" },
+    },
+  ];
+
+  function xssOptions(viewPath?: string) {
+    return {
+      "x-webdetector-safe-to-test": true,
+      "x-webdetector-test": {
+        kind: "generic",
+        baseline: {
+          message: "Mensagem normal de teste",
+        },
+        browser_xss: true,
+        ...(viewPath
+          ? { browser_view_path: viewPath }
+          : {}),
+      },
+    };
+  }
+
+  // XSS refletido - GET e POST
+  paths["/api/lab/xss/reflected"] = {
+    get: {
+      summary: "XSS refletido via GET",
+      tags: ["Laboratório de Segurança"],
+      parameters: xssQuery,
+      ...xssOptions(),
+    },
+
+    post: {
+      summary: "XSS refletido via POST",
+      tags: ["Laboratório de Segurança"],
+      requestBody: xssBody,
+      ...xssOptions(),
+    },
+  };
+
+  // XSS baseado em DOM
+  paths["/api/lab/xss/dom"] = {
+    get: {
+      summary: "XSS baseado em DOM",
+      tags: ["Laboratório de Segurança"],
+      parameters: xssQuery,
+      ...xssOptions(),
+    },
+  };
+
+  // XSS armazenado
+  paths["/api/lab/xss/stored"] = {
+    post: {
+      summary: "XSS armazenado em memória",
+      tags: ["Laboratório de Segurança"],
+      requestBody: xssBody,
+      ...xssOptions("/api/lab/xss/stored"),
+    },
+  };
+}
+
+
 // Modo de demonstração somente local.
 const demoMode =
   process.env.NODE_ENV === "development" &&
@@ -683,26 +760,26 @@ export const openapiSpec = {
 
   ...(demoMode
     ? {
-        "x-webdetector-auth-profiles": {
-          funcionario: {
-            description:
-              "Funcionário administrativo (conta fictícia)",
-            loginPath: "/api/auth/login",
-            usernameField: "username",
-            passwordField: "password",
-            cookieName: "chegalogo_session",
-          },
-
-          cliente: {
-            description:
-              "Cliente de testes (conta fictícia)",
-            loginPath: "/api/clients/login",
-            usernameField: "username",
-            passwordField: "password",
-            cookieName: "chegalogo_session",
-          },
+      "x-webdetector-auth-profiles": {
+        funcionario: {
+          description:
+            "Funcionário administrativo (conta fictícia)",
+          loginPath: "/api/auth/login",
+          usernameField: "username",
+          passwordField: "password",
+          cookieName: "chegalogo_session",
         },
-      }
+
+        cliente: {
+          description:
+            "Cliente de testes (conta fictícia)",
+          loginPath: "/api/clients/login",
+          usernameField: "username",
+          passwordField: "password",
+          cookieName: "chegalogo_session",
+        },
+      },
+    }
     : {}),
 
   paths,

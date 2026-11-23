@@ -15,18 +15,18 @@
   },
   "attack_normal_versus_malicioso": {
     "N": 60,
-    "TP": 36,
+    "TP": 37,
     "TN": 20,
     "FP": 0,
-    "FN": 4,
+    "FN": 3,
     "FP_%": 0.0,
-    "FN_%": 10.0,
-    "Acuracia_%": 93.33,
+    "FN_%": 7.5,
+    "Acuracia_%": 95.0,
     "Precisao_%": 100.0,
-    "Recall_%": 90.0,
-    "F1_%": 94.74
+    "Recall_%": 92.5,
+    "F1_%": 96.1
   },
-  "attack_tipo_acerto_%": 93.33,
+  "attack_tipo_acerto_%": 95.0,
   "confusoes_SQLi_XSS": 0,
   "matriz_tipos": {
     "norm": {
@@ -40,9 +40,9 @@
       "xss": 0
     },
     "xss": {
-      "norm": 4,
+      "norm": 3,
       "sqli": 0,
-      "xss": 16
+      "xss": 17
     }
   },
   "aviso": "Teste externo controlado com rótulos definidos antes da classificação; resultados não demonstram exploração real ou generalização em produção."

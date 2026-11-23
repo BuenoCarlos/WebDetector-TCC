@@ -1,15 +1,12 @@
-
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router";
-
+import { interpretarML } from "../services/mlInterpretation";
 import {
   baixarPdfVarreduraDetalhado,
   baixarPdfAvaliacaoDetalhado,
 } from "../services/pdfReportService";
 
-// =====================================================
 // CONFIGURAÇÃO
-// =====================================================
 
 const API = (
   import.meta.env.VITE_API_URL ||
@@ -25,9 +22,7 @@ const primaryButton =
 const secondaryButton =
   "rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50";
 
-// =====================================================
 // TIPOS
-// =====================================================
 
 type Tab = "scans" | "individual";
 
@@ -144,9 +139,7 @@ type StoredEvaluation = {
   report: EvaluationReport;
 };
 
-// =====================================================
 // API
-// =====================================================
 
 async function api<T>(
   path: string,
@@ -180,9 +173,7 @@ async function api<T>(
   return data as T;
 }
 
-// =====================================================
 // FUNÇÕES AUXILIARES
-// =====================================================
 
 function errorMessage(error: unknown): string {
   return error instanceof Error
@@ -245,9 +236,7 @@ function getOutcomeColor(value?: string): string {
   }
 }
 
-// =====================================================
 // COMPONENTES VISUAIS
-// =====================================================
 
 function OutcomeBadge({
   outcome,
@@ -305,9 +294,7 @@ function EmptyState({
   );
 }
 
-// =====================================================
 // PÁGINA RELATÓRIOS
-// =====================================================
 
 export default function Relatorios() {
   const [searchParams, setSearchParams] =
@@ -367,9 +354,7 @@ export default function Relatorios() {
   const [refresh, setRefresh] =
     useState(0);
 
-  // ===================================================
   // RECEBER LINK VINDO DO MONITORAMENTO
-  // ===================================================
 
   useEffect(() => {
     const linkedScan = searchParams.get("scanId");
@@ -392,9 +377,7 @@ export default function Relatorios() {
     }
   }, [searchParams]);
 
-  // ===================================================
   // CARREGAMENTO INICIAL
-  // ===================================================
 
   useEffect(() => {
     const controller = new AbortController();
@@ -445,9 +428,7 @@ export default function Relatorios() {
     return () => controller.abort();
   }, [refresh]);
 
-  // ===================================================
   // CARREGAR DETALHES DA VARREDURA
-  // ===================================================
 
   useEffect(() => {
     setScanDetail(null);
@@ -484,9 +465,7 @@ export default function Relatorios() {
     return () => controller.abort();
   }, [tab, scanId, refresh]);
 
-  // ===================================================
   // CARREGAR HISTÓRICO INDIVIDUAL
-  // ===================================================
 
   useEffect(() => {
     setEvaluationHistory([]);
@@ -534,9 +513,7 @@ export default function Relatorios() {
     return () => controller.abort();
   }, [tab, scenarioId, refresh]);
 
-  // ===================================================
   // ABRIR AVALIAÇÃO INDIVIDUAL
-  // ===================================================
 
   useEffect(() => {
     setSelectedEvaluation(null);
@@ -607,9 +584,7 @@ export default function Relatorios() {
     loadingEvaluations,
   ]);
 
-  // ===================================================
   // DADOS DERIVADOS
-  // ===================================================
 
   const scenarioNames = new Map(
     scenarios.map((scenario) => [
@@ -664,9 +639,7 @@ export default function Relatorios() {
     }
   }
 
-  // ===================================================
   // NAVEGAÇÃO
-  // ===================================================
 
   function changeTab(next: Tab) {
     setTab(next);
@@ -720,9 +693,7 @@ export default function Relatorios() {
     });
   }
 
-  // ===================================================
   // GERAR PDF DE VARREDURA COMPLETA
-  // ===================================================
 
   async function downloadScanPdf() {
     if (
@@ -763,9 +734,7 @@ export default function Relatorios() {
     }
   }
 
-  // ===================================================
   // GERAR PDF DE AVALIAÇÃO INDIVIDUAL
-  // ===================================================
 
   async function downloadAssessmentPdf() {
     if (!selectedEvaluation?.report) return;
@@ -791,9 +760,7 @@ export default function Relatorios() {
     }
   }
 
-  // ===================================================
   // INTERFACE
-  // ===================================================
 
   return (
     <main className="mx-auto max-w-7xl space-y-6 p-4 md:p-6">
@@ -845,8 +812,8 @@ export default function Relatorios() {
             type="button"
             onClick={() => changeTab("scans")}
             className={`rounded-xl px-4 py-2.5 text-sm font-semibold transition ${tab === "scans"
-                ? "bg-blue-600 text-white"
-                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+              ? "bg-blue-600 text-white"
+              : "bg-slate-100 text-slate-600 hover:bg-slate-200"
               }`}
           >
             Varreduras completas
@@ -856,8 +823,8 @@ export default function Relatorios() {
             type="button"
             onClick={() => changeTab("individual")}
             className={`rounded-xl px-4 py-2.5 text-sm font-semibold transition ${tab === "individual"
-                ? "bg-blue-600 text-white"
-                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+              ? "bg-blue-600 text-white"
+              : "bg-slate-100 text-slate-600 hover:bg-slate-200"
               }`}
           >
             Avaliações individuais
@@ -963,9 +930,7 @@ export default function Relatorios() {
           </div>
         )}
 
-      {/* =================================================
-          RELATÓRIO DE VARREDURA COMPLETA
-      ================================================= */}
+      {/*RELATÓRIO DE VARREDURA COMPLETA*/}
 
       {tab === "scans" &&
         !loading &&
@@ -1276,8 +1241,8 @@ export default function Relatorios() {
                       setSearchParams({});
                     }}
                     className={`flex w-full flex-wrap items-center justify-between gap-3 rounded-xl border p-4 text-left text-sm transition hover:bg-slate-50 ${assessmentId === entry.id
-                        ? "border-blue-400 bg-blue-50/30"
-                        : "border-slate-200"
+                      ? "border-blue-400 bg-blue-50/30"
+                      : "border-slate-200"
                       }`}
                   >
                     <div>
@@ -1508,6 +1473,20 @@ export default function Relatorios() {
                             {attempt.ml?.attack
                               ?.classification ||
                               "Indisponível"}
+                          </p>
+
+                          <p>
+                            <b>Interpretação ML:</b>{" "}
+                            <span
+                              className={`inline-block rounded-md px-2 py-1 text-xs font-semibold ${interpretarML(attempt.ml).className
+                                }`}
+                            >
+                              {interpretarML(attempt.ml).label}
+                            </span>
+                          </p>
+
+                          <p className="text-xs text-slate-500">
+                            {interpretarML(attempt.ml).description}
                           </p>
 
                           {attempt.testResponse?.body_digest && (
